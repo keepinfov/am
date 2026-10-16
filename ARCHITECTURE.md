@@ -46,18 +46,18 @@ Component catalog -> validated, resolved definitions -> Runtime
 
 ## 3. Components And Composition
 
-| Kind | Responsibility |
-| --- | --- |
-| Connection | Endpoint, protocol, network settings, credential references |
-| Model preset | Connection reference, opaque model ID, request parameters |
-| Role | Purpose and instructions |
-| Skill | Instructions, reference material and associated resources |
-| Tool | Input/result schemas, backend and execution requirements |
-| Execution preset | Executor, shell, environment, workspace, required guarantees |
-| Policy preset | Rights, approvals, expansion ceiling and delegation authority |
-| Budget preset | Resource and concurrency constraints |
-| Agent profile | Explicit composition of the selected components |
-| Workflow | Future event/condition/action definitions |
+| Kind             | Responsibility                                                |
+| ---------------- | ------------------------------------------------------------- |
+| Connection       | Endpoint, protocol, network settings, credential references   |
+| Model preset     | Connection reference, opaque model ID, request parameters     |
+| Role             | Purpose and instructions                                      |
+| Skill            | Instructions, reference material and associated resources     |
+| Tool             | Input/result schemas, backend and execution requirements      |
+| Execution preset | Executor, shell, environment, workspace, required guarantees  |
+| Policy preset    | Rights, approvals, expansion ceiling and delegation authority |
+| Budget preset    | Resource and concurrency constraints                          |
+| Agent profile    | Explicit composition of the selected components               |
+| Workflow         | Future event/condition/action definitions                     |
 
 - Structured definitions use TOML; instructions use Markdown, with resources and
   scripts alongside them. A skill can use a `SKILL.md` entry point.
@@ -250,14 +250,14 @@ time after tools/children already exist.
 
 ## 10. Delivery And Architectural Acceptance
 
-| Stage | First relevant mechanisms |
-| --- | --- |
-| 1 | Offline kernel and bounded clients; no fake extension/profile implementation |
-| 2 | Concrete connection/model definitions, credentials, provider and context |
-| 3 | Checked tools, script backend, execution presets, basic policy/approvals and service lifecycle |
-| 4 | Composed agent profiles, skills, delegation, workspaces and branch budgets |
-| 5 | Rich escalation, unattended management, revocation and OS guarantee expansion |
-| 6+ | Knowledge lifecycle/import; MCP, workflow/harness and web as scoped follow-ups |
+| Stage | First relevant mechanisms                                                                      |
+| ----- | ---------------------------------------------------------------------------------------------- |
+| 1     | Offline kernel and bounded clients; no fake extension/profile implementation                   |
+| 2     | Concrete connection/model definitions, credentials, provider and context                       |
+| 3     | Checked tools, script backend, execution presets, basic policy/approvals and service lifecycle |
+| 4     | Composed agent profiles, skills, delegation, workspaces and branch budgets                     |
+| 5     | Rich escalation, unattended management, revocation and OS guarantee expansion                  |
+| 6+    | Knowledge lifecycle/import; MCP, workflow/harness and web as scoped follow-ups                 |
 
 Live authority checks and cancellation hooks start with the relevant privileged
 operation, not only in Stage 5. Concrete scripts, manifests and process protocols

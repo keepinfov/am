@@ -1,15 +1,15 @@
 # Local deterministic fixture only. This does not configure a real model/API.
 [provider]
-scenario = "normal" # normal, waiting, interrupted, error, burst
+scenario = "normal"  # normal, waiting, interrupted, error, burst
 delay_ms = 70
 first_event_ms = 200
-chunks = 64 # used by burst
+chunks = 64          # used by burst
 
 [interface]
 status_line = true
 prompt_history = true
 status_preset = "bars" # text, braille, minimal, bars
-status_color = true # restrained status accents
+status_color = true    # restrained status accents
 
 [limits]
 queue_messages = 32
@@ -17,6 +17,6 @@ message_bytes = 16384
 response_bytes = 65536
 history_page = 50
 checkpoint_ms = 250
-storage_bytes = 67108864 # SQLite page quota; WAL has a separate bounded overhead
-output_bytes = 16777216 # maximum output retained per attempt
+storage_bytes = 67108864   # SQLite page quota; WAL has a separate bounded overhead
+output_bytes = 16777216    # maximum output retained per attempt
 artifact_bytes = 268435456 # total output artifact quota; at least output_bytes
