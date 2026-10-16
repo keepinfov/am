@@ -1,0 +1,21 @@
+# Optional alternate shortcuts. Missing entries inherit saved preferences/defaults; [] disables
+# a configurable shortcut. Ctrl+C always keeps its confirmed-exit behavior.
+[keys]
+commands = ["alt+p"]
+focus_input = ["alt+i"] # Toggle focus between the primary and secondary input fields.
+help = ["alt+k"]
+history = ["alt+h", "f2"] # Function keys are opt-in, never required.
+details = ["alt+d"]
+stop = [] # Use /stop instead of a potentially accidental hotkey.
+
+# Command chains are validated before startup. Maximum 32 bindings, 16 steps each.
+[[keys.macros]]
+key = "alt+s"
+commands = ["/stop"]
+
+[[keys.macros]]
+key = "alt+b"
+commands = ["/commands keep", "/bindings"]
+
+# In the client: /bind alt+s /stop --default
+# /unbind alt+s --default saves removal; Ctrl+C cannot be rebound or removed.
