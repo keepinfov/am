@@ -71,9 +71,10 @@ def main():
             # Ratatui emits cursor movement instead of some padding spaces.
             return re.sub(rb"\s", b"", plain(start))
 
-        def repaint(width=100, height=28):
+        def repaint(width=100, height=28, *, last_frame=False):
             start = len(output)
             for columns in (width - 1, width):
+                latest = len(output)
                 fcntl.ioctl(
                     slave,
                     termios.TIOCSWINSZ,
@@ -81,7 +82,7 @@ def main():
                 )
                 child.send_signal(signal.SIGWINCH)
                 pump(0.1)
-            return start
+            return latest if last_frame else start
 
         def assert_text(start, text):
             assert re.sub(rb"\s", b"", text.encode()) in compact(start), (
@@ -161,6 +162,24 @@ def main():
             wait_for(
                 lambda: rows("SELECT text,cursor FROM composer") == [(text, cursor)]
             )
+
+        def input_ready():
+            def ready():
+                frame = compact(repaint(last_frame=True))
+                return b"/help" in frame and b"savinginput" not in frame
+
+            wait_for(ready)
+
+        def submit_plain(text):
+            before = len(receipts("SubmitInputAccumulated"))
+            keys(text.encode() + b"\r", 0.04)
+            wait_for(lambda: len(receipts("SubmitInputAccumulated")) == before + 1)
+            _, body, reply = receipts("SubmitInputAccumulated")[-1]
+            assert body["source"] == body["text"] == text, body
+            assert body["mode"] == "after" and reply == "Ack", (body, reply)
+            # Commit precedes client ACK processing. A new complete Root frame,
+            # not an already-empty SQLite composer, proves the input is unlocked.
+            input_ready()
 
         def start(config=None):
             nonlocal child
@@ -732,11 +751,12 @@ def main():
             database = Path(directory) / "natural.sqlite3"
             preferences = Path(directory) / "natural-preferences.toml"
             start()
-            keys(b"natural source\r", 0.04)
+            input_ready()
+            submit_plain("natural source")
             natural_source = running("natural source")
-            keys(b"natural first\r", 0.04)
+            submit_plain("natural first")
             composer("", 0)
-            keys(b"natural second\r", 0.04)
+            submit_plain("natural second")
             natural_text = "natural first\n\nnatural second"
             wait_for(
                 lambda: (
@@ -801,6 +821,8 @@ def main():
                 for _, body, _ in receipts("SubmitInputAccumulated")
             )
             assert_once()
+            # Completion is durable before a transient acceptance notice expires.
+            wait_for(lambda: b"ready" in compact(repaint()))
             idle = repaint()
             assert_text(idle, "ready")
             assert not any(
@@ -831,11 +853,12 @@ def main():
             database = Path(directory) / "pending.sqlite3"
             preferences = Path(directory) / "pending-preferences.toml"
             start(slow_config)
-            keys(b"batch source\r", 0.05)
+            input_ready()
+            submit_plain("batch source")
             source = running("batch source")
-            keys(b"batch first\r", 0.08)
+            submit_plain("batch first")
             composer("", 0)
-            keys(b"batch second\r", 0.08)
+            submit_plain("batch second")
             combined = "batch first\n\nbatch second"
             wait_for(
                 lambda: (
@@ -847,6 +870,7 @@ def main():
             assert rows("SELECT COUNT(*) FROM messages") == [(2,)]
             assert_text(repaint(), "\u250b batch first")
             assert_held(source, batch_id, combined)
+            tool_wait(source)
             frames = []
             for _ in range(3):
                 frame = repaint()
@@ -863,7 +887,6 @@ def main():
                 frames.extend(bars)
                 assert_held(source, batch_id, combined)
             assert len(set(frames)) > 1, "active bars did not animate"
-            tool_wait(source)
             assert_held(source, batch_id, combined)
             wait_for(
                 lambda: bool(
@@ -972,11 +995,12 @@ def main():
 
             # Root double-Esc with queued input has the same checked cancellation
             # and unpaused automatic FIFO delivery as /stop.
-            keys(b"escape source\r", 0.05)
+            input_ready()
+            submit_plain("escape source")
             escape_source = running("escape source")
-            keys(b"escape first\r", 0.05)
+            submit_plain("escape first")
             composer("", 0)
-            keys(b"escape second\r", 0.05)
+            submit_plain("escape second")
             escape_text = "escape first\n\nescape second"
             wait_for(
                 lambda: (
@@ -1007,14 +1031,15 @@ def main():
             )  # No queued item: deliberately pause.
 
             # Ordinary nonempty input resumes on one Enter, with no chooser or /run.
-            keys(b"edit source\r", 0.05)
+            input_ready()
+            submit_plain("edit source")
             editing_source = running("edit source")
             assert rows("SELECT paused FROM session") == [(0,)]
             submitted = receipts("SubmitInputAccumulated")[-1][1]
             assert submitted["resume"] and submitted["expected_paused"], submitted
-            keys(b"pending first\r", 0.08)
+            submit_plain("pending first")
             composer("", 0)
-            keys(b"pending second\r", 0.08)
+            submit_plain("pending second")
             authoritative = "pending first\n\npending second"
             wait_for(
                 lambda: (
@@ -1023,12 +1048,14 @@ def main():
                 )
             )
             edit_id = rows("SELECT id FROM messages WHERE state='queued'")[0][0]
+            tool_wait(editing_source)
             # Explicit /send consumes its draft exactly once but never steers.
             draft_text = "saved pending draft"
             keys(draft_text.encode(), 0.05)
             command("/draft save")
             wait_for(lambda: rows("SELECT text FROM drafts") == [(draft_text,)])
             composer("", 0)
+            input_ready()
             pending_draft_id, draft_revision = rows("SELECT id,revision FROM drafts")[0]
             command(f"/send {pending_draft_id[:8]}")
             authoritative += "\n\n" + draft_text
@@ -1060,7 +1087,6 @@ def main():
                 finish
             )
             assert not finish[1]["expected_paused"] and finish[2] == "Ack", finish
-            tool_wait(editing_source)
             wait_for(
                 lambda: bool(
                     rows(
@@ -1151,10 +1177,12 @@ def main():
             assert not rows("SELECT id FROM attempts WHERE message_id=?", (edit_id,))
 
             # Nonempty edit Enter after Stop atomically replaces, resumes and sends.
-            keys(b"\x15resume source\r", 0.05)
+            input_ready()
+            keys(b"\x15", 0.05)
+            submit_plain("resume source")
             resume_source = running("resume source")
             tool_wait(resume_source)
-            keys(b"replace pending\r", 0.08)
+            submit_plain("replace pending")
             composer("", 0)
             replacement_id = rows("SELECT id FROM messages WHERE state='queued'")[0][0]
             keys(shadow.encode() + b"\x01\x1b[C\x1b[C", 0.08)

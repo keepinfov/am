@@ -909,6 +909,27 @@ Earlier statements that macOS/remote CI were unverified describe the initial
 local delivery, not this new platform evidence. This publication-evidence update
 is documentation-only; its final head must still pass the same required checks.
 
+The [subsequent run at `9fb6a31`](https://github.com/keepinfov/am/actions/runs/39032403673)
+again passed all Rust checks on both platforms and the full Linux job, but macOS
+PTY exposed a harness ACK race: an empty SQLite composer is not proof that the UI
+has consumed a submission ACK and released its input guard. The smoke now verifies
+each new ordinary-send receipt and exact payload, then waits for a freshly rendered
+normal Root frame without `saving input` before further typing. It does not wait
+for generation to finish or redefine the durable shadow-composer helper.
+
+The same explicit barrier covers the natural/batch/stop/edit accumulation paths.
+Tool-boundary observations precede optional animation/edit work, and idle status is
+observed after transient feedback instead of assuming its timeout has elapsed.
+No deadline increase, larger sleep or skipped FIFO/full-turn/no-steering/duplicate
+assertion was used. The full revised PTY smoke and pinned Python checks passed
+locally. This is a harness-only follow-up; the new published head must still pass
+the live Linux/macOS gate.
+
+For later heads, use [PR #1 checks](https://github.com/keepinfov/am/pull/1/checks)
+and its publication-verification comment as current evidence; the immutable runs
+above describe their exact historical commits, not automatic acceptance of a newer
+head. Keep this distinction when handing off or making an explicit merge decision.
+
 Remaining operator work is review and explicit merge authorization, not remote
 creation or basic protection. No merge, release, tag or version change occurred.
 Manual GUI, real-provider, performance and live label-automation evidence remain
