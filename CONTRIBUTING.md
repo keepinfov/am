@@ -18,9 +18,10 @@ never force-push or rewrite published history, and do not change Git identity,
 signing keys or configuration without permission. Access to a signing key does
 not imply permission to publish, merge or release.
 
-This clone currently has no remote. Preparing workflows is not configuring
-GitHub rulesets or publishing the project. The initial signed Stage 1 snapshot
-on `master` is the sole bootstrap exception to branch/PR workflow.
+The agreed upstream is the public [keepinfov/am](https://github.com/keepinfov/am)
+repository. Publishing to another destination or changing visibility still needs
+separate authorization. The initial signed Stage 1 snapshot on `master` is the
+sole bootstrap exception to branch/PR workflow.
 
 ## Branches And Review
 
@@ -86,8 +87,9 @@ By default this checks signature armor, not authenticity. To use existing local
 Git trust configuration, add `--verify-signatures`; a missing allowed-signers
 configuration fails instead of pretending verification succeeded. No script
 configures keys or trust automatically. In CI, each added commit must also have
-GitHub API verification `verified: true`, `reason: valid`. Configure the future
-GitHub ruleset to require verified signed commits as an independent server gate.
+GitHub API verification `verified: true`, `reason: valid`. The upstream `master`
+ruleset independently requires verified signed commits; keep this server gate
+enabled rather than relying only on a checker within the proposed change.
 
 ## Change Size
 
@@ -222,7 +224,7 @@ or truncated file metadata. GitHub does not offer atomic head-conditional label
 writes, so a small check/write race is possible; the next event reconciles it.
 The first policy PR cannot run the labeler until trusted base code exists.
 
-Once a GitHub destination is explicitly approved, configure:
+The agreed upstream `master` ruleset is active with these settings:
 
 - Default branch `master`, PR-required changes, verified signed commits, blocked
   deletion/non-fast-forward updates, and required `required` CI status.
@@ -233,6 +235,12 @@ Once a GitHub destination is explicitly approved, configure:
 - Explicit bypass policy; never mistake a prose rule or editable CI file for an
   independent server-side security boundary.
 
-These server settings, label application and remote CI runs have not been
-performed merely by adding this file. Until a remote is configured, only local
-validation and mocked GitHub behavior can be verified.
+The ruleset is `Protect master` (ID `25301183`) with no bypass actors. Its
+`required` status is bound to the GitHub Actions integration. Recheck live settings
+when changing policy; tracked prose alone is not server enforcement.
+
+The initial policy proposal is [draft PR #1](https://github.com/keepinfov/am/pull/1),
+not an authorized merge. Its size label was applied manually because the trusted
+base does not yet contain the label workflow. Automatic live labeling remains
+unverified until that workflow is available on the default branch. Actual CI
+evidence and remaining gaps are recorded in PLAN section 13.

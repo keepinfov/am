@@ -799,8 +799,9 @@ the offline runtime contract or implement Stage 2.
   Slopium-style commit/PR contract, signed commits, `master` PR merge workflow,
   automatic branch/commit/push/draft-PR authority only for assigned work and agreed
   remotes, changelog fragments, and advisory size labels with L/XL explanations.
-- No hooks are created or installed. No Git identity, signing or hook configuration
-  is changed. No remote, push, PR, merge, release, tag or visibility change occurs.
+- No hooks were created or installed, and no Git identity/signing/hook configuration
+  changed. Initial delivery was local; subsequent authorized publication is recorded
+  below. Merge, release and tags remain separately controlled.
 - `scripts/repo_policy.py` checks files, added commits, PR metadata/fragments and
   aggregate merge-base size. Raw generated-lockfile totals stay visible; tests/docs
   count toward review size. Source footprint and churn ratios have distinct meanings.
@@ -845,7 +846,70 @@ under `/tmp/opencode` and a content-addressed Nix shell for Node/Python. No glob
 Git/tool configuration changes were needed. These development tools are not runtime
 dependencies of AM.
 
-Remaining operator work: agree a GitHub destination/visibility, publish only with
-that permission, configure required status/signatures/PR-only rules, and review
-the policy branch before an explicitly authorized merge. No live label application
-or GitHub API verification of these unpublished commits has occurred.
+### GitHub Publication
+
+On 2026-10-17 the operator approved public `keepinfov/am` creation, followed by
+the proposed baseline/branch publication and protection setup, but not merge.
+
+- Upstream is [keepinfov/am](https://github.com/keepinfov/am), public. `origin` uses
+  its SSH URL. `master` contains only baseline `8c50390`; policy work remains on
+  `ci/repository-policy` in [draft PR #1](https://github.com/keepinfov/am/pull/1).
+- Repository merge settings allow merge commits only, use PR-title merge subjects
+  and blank bodies, delete merged branches and disable auto-merge.
+- Active `Protect master` ruleset ID `25301183` requires PRs and verified signed
+  commits, blocks deletion/non-fast-forward pushes, and has no bypass actors.
+  No second approving reviewer is mandatory. `required` is required from GitHub
+  Actions integration `15368`, without requiring the branch to be up to date.
+- All five published commits through `1ff51c8` were verified by the GitHub API:
+  `verified: true`, `reason: valid`. Local presence-only checks were not used as
+  proof of cryptographic trust.
+- Five size labels were created and `size/XL` applied to PR #1. The labeling
+  workflow cannot execute trusted base code until it exists on `master`; this
+  manual bootstrap is not evidence of successful live label automation.
+- [First live policy run](https://github.com/keepinfov/am/actions/runs/39030017666)
+  passed policy/style/rustfmt but failed macOS delivery and Linux read-only tests.
+  The original baseline run also failed; it remains historical evidence, not a
+  successful acceptance report for `master`.
+- The Linux failure exposed duplicate watch publication: an already-published
+  mutation left a batch dirty flag set, causing read-side/end-of-batch updates.
+  `f303718` separates command publication from subsequent provider progress,
+  preserving publication before ACK and fault visibility. A real-client regression
+  covers repeated idle mutation/read cycles without weakening the read-only test.
+- The macOS failure was a test assumption: the shared event cursor can advance
+  while a producer is streaming. Rejection/replay now check receipt counts, queued
+  state and allowed producer-event ownership, plus command-before-completion and
+  tool-finish/attempt-finish/successor-start ordering. No sleeps, skips or larger
+  timing thresholds replace those assertions. A user-facing fragment records the
+  runtime correction; PR impact is now user-facing.
+- Local re-verification after `f303718` passed formatting, strict Clippy, 466 Rust
+  tests (345 library, 1 CLI, 120 integration), build, terminal smoke and pinned
+  style/file checks. The 123 policy and 15 tooling tests remain unchanged.
+- [Follow-up run at `f303718`](https://github.com/keepinfov/am/actions/runs/39031422150)
+  passed the full Linux gate, but macOS exposed a lexical test-path mismatch:
+  its `/var` temporary root aliases `/private/var`. `1ff51c8` fixes the expected
+  session parent in that test, preserving strict filename/UUID/permission checks
+  and leaving production canonicalization/symlink protection unchanged.
+- [Successful live run at `1ff51c8`](https://github.com/keepinfov/am/actions/runs/39031843697)
+  passed policy, style, rustfmt, both application jobs and `required`. Actual job
+  logs independently confirm 466 Rust tests passed, 0 failed/ignored on each OS,
+  plus build and terminal smoke. The macOS job took 3m56s; Linux took 2m47s.
+  These are one run's observations, not performance guarantees.
+- The successful run reports deprecation warnings from older pinned Actions:
+  their Node 20 runtimes are forced to Node 24, with a `punycode` warning. Refresh
+  those pins in a reviewed follow-up; no warning suppression or weakened gate was
+  used to obtain the pass.
+
+| Live Acceptance At `1ff51c8`  | Evidence                                                                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Policy/style/rustfmt/required | All successful in run `39031843697`                                                                                                         |
+| Linux application             | [Job `117393792690`](https://github.com/keepinfov/am/actions/runs/39031843697/job/117393792690): strict Clippy, 466 tests, build, PTY smoke |
+| macOS application             | [Job `117393792649`](https://github.com/keepinfov/am/actions/runs/39031843697/job/117393792649): strict Clippy, 466 tests, build, PTY smoke |
+
+Earlier statements that macOS/remote CI were unverified describe the initial
+local delivery, not this new platform evidence. This publication-evidence update
+is documentation-only; its final head must still pass the same required checks.
+
+Remaining operator work is review and explicit merge authorization, not remote
+creation or basic protection. No merge, release, tag or version change occurred.
+Manual GUI, real-provider, performance and live label-automation evidence remain
+separate from the offline automated acceptance gate.

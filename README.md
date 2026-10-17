@@ -824,11 +824,14 @@ cargo build --locked
 python3 tests/terminal_smoke.py
 ```
 
-The commands above passed locally on Linux on 2026-10-16: formatting,
-warnings-denied Clippy, 465 Rust tests (345 library, 1 CLI, 119 integration),
-a debug build and the standard-library PTY smoke. New regressions cover cached
-running-action completion/cancellation, output growth after EOF, page-one catch-up,
-and artifact reads preserving permissions/content and durable state. See
+The commands above passed locally on Linux and in
+[Linux/macOS CI on 2026-10-17](https://github.com/keepinfov/am/actions/runs/39031843697):
+formatting, warnings-denied Clippy, 466 Rust tests (345 library, 1 CLI, 120
+integration), a debug build and the standard-library PTY smoke. Regressions cover
+cached action completion/cancellation, output growth after EOF, page-one catch-up,
+read-only artifact access and command snapshot publication before ACK without
+duplicate idle/read updates. The live run also confirms the pinned policy/style
+gates; see
 [PLAN section 13](PLAN.md#13-current-contract-and-agent-handoff) for the handoff.
 The earlier separate actual-DSR pyte run reported 120 passed checks, including final publication ordering,
 accepted-card handoff, idle status alignment and settings feedback/margins.
@@ -841,7 +844,7 @@ not real-provider or manual GUI acceptance.
 | Client Rust tests               | Passed: stop catalog/flag rejection, double Esc timing/context, input preservation on rejection, queue-first Up with exact shadow/caret saving, ACK-only restore, edit deletion, paused-send resume, completion/settings/help/journal, four status presets and time-driven white bars. Geometry and ordering tests cover content-sized rows, post-publication resizing, completed native backlog, fullscreen receipt synchronization and authoritative accepted-card identities.                                                                                                                   |
 | Unix PTY smoke                  | Passed: After delivery through full generation/actions, checked stop FIFO autorun/no-queue pause, bars, lease-preview hiding, edit cancel/delete/resume, shadow recovery, settings feedback and settings/history/exit. Emitted-sequence and SQLite/preferences/artifact checks use only Python's standard library.                                                                                                                                                                                                                                                                                 |
 | Linux pyte + live PTY           | Passed 120 checks with no failures using actual emulated DSR replies, above and at the bottom edge, plus settings screens: exact shell/native scrollback preservation, no duplicated user cards or response chunks, no empty active reserve or idle bars prefix, Unicode caret, accepted-card/native publication handoff, retiring-tail visibility, inline gaps, persistent settings feedback, rejected/ACK-only default saves and restored terminal modes. Final report and settings screens are under `/tmp/opencode/am-layout-publication-evidence-spctcvy2`; pyte is not a project dependency. |
-| Linux/macOS CI                  | Workflow provided; remote results are not verified here. Earlier local results were on Linux, not a current cross-platform pass report.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Linux/macOS CI                  | Passed in [run 39031843697](https://github.com/keepinfov/am/actions/runs/39031843697) at `1ff51c8`: strict Clippy, 466 tests with none failed/ignored, build and PTY smoke independently on each OS. This is offline-fixture acceptance, not real-provider or GUI evidence.                                                                                                                                                                                                                                                                                                                        |
 | Manual GUI/platform/performance | No manual GUI-terminal, macOS or real-provider acceptance is claimed. Pyte is a virtual terminal model, not a GUI emulator. Long-history latency and RSS are unmeasured here.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 The repository PTY smoke script checks emitted sequences and persisted state with
@@ -864,7 +867,10 @@ coding-agent work is verified.
 Changes use signed commits on `type/short-kebab` branches and PRs into `master`,
 merged as merge commits. [AGENTS.md](AGENTS.md#git-authority) records the scoped
 agent authority; merges/releases and remote creation need explicit permission.
-There is currently no remote and no configured server-side ruleset.
+The public upstream is [keepinfov/am](https://github.com/keepinfov/am). Its `master`
+ruleset requires PRs, verified signatures and the GitHub Actions `required` check,
+and blocks deletion/non-fast-forward updates without bypass actors. The policy
+proposal is [draft PR #1](https://github.com/keepinfov/am/pull/1); it is not merged.
 
 The fast CI gate checks commit/PR structure, declared change impact, changelog
 fragments, file validity and its own tests. Separate pinned style/rustfmt checks
