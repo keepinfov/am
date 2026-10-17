@@ -1306,6 +1306,17 @@ async fn draft_send_and_finish_pending_edit_wait_for_full_generation_after_commi
                 expected_paused: pause_before,
             }
         };
+        let database = Connection::open(&path).unwrap();
+        let receipt_count = || {
+            database
+                .query_row("SELECT COUNT(*) FROM command_results", [], |row| {
+                    row.get::<_, i64>(0)
+                })
+                .unwrap()
+        };
+        let before = client.snapshot();
+        let pending = before.queue[0].clone();
+        let receipts = receipt_count();
         let cursor = client.snapshot().cursor;
         let mut stale = command.clone();
         match &mut stale {
@@ -1317,10 +1328,38 @@ async fn draft_send_and_finish_pending_edit_wait_for_full_generation_after_commi
             } => *expected_paused = !pause_before,
             _ => unreachable!(),
         }
-        assert!(client.command(stale).await.is_err());
+        assert!(
+            client
+                .command_with_id("stale-pause".into(), stale)
+                .await
+                .is_err()
+        );
         assert_eq!(client.snapshot().paused, pause_before);
         assert_eq!(client.snapshot().active.unwrap().attempt_id, first);
-        assert_eq!(client.snapshot().cursor, cursor);
+        assert_eq!(receipt_count(), receipts);
+        assert_eq!(
+            serde_json::to_value(client.snapshot().queue).unwrap(),
+            serde_json::to_value(before.queue).unwrap()
+        );
+        let Reply::Events(progress) = client
+            .command(Command::Events {
+                after: cursor,
+                limit: 200,
+            })
+            .await
+            .unwrap()
+        else {
+            panic!()
+        };
+        // Streaming may checkpoint while a rejected command is in flight. It
+        // must not add command-owned events or receipts to that progress.
+        assert!(progress.iter().all(|event| {
+            event.attempt_id.as_deref() == Some(first.as_str())
+                && matches!(
+                    event.kind.as_str(),
+                    "response_checkpoint" | "fixture_tool_started" | "fixture_tool_finished"
+                )
+        }));
         assert!(matches!(
             client
                 .command_with_id("deliver".into(), command.clone())
@@ -1330,11 +1369,13 @@ async fn draft_send_and_finish_pending_edit_wait_for_full_generation_after_commi
         ));
         assert!(!client.snapshot().paused);
         assert_eq!(client.snapshot().active.unwrap().attempt_id, first);
-        wait(&client, |s| {
+        let next = wait(&client, |s| {
             s.active.as_ref().is_some_and(|a| a.attempt_id != first)
         })
-        .await;
-        let next = client.snapshot().active.unwrap().attempt_id;
+        .await
+        .active
+        .unwrap()
+        .attempt_id;
         let Reply::History(history) = client
             .command(Command::History {
                 before: None,
@@ -1355,15 +1396,56 @@ async fn draft_send_and_finish_pending_edit_wait_for_full_generation_after_commi
                 "held\n\n/draft"
             }
         );
+        let sequence = |kind: &str, attempt: Option<&str>, payload: Option<&str>| {
+            database
+                .query_row(
+                    "SELECT seq FROM events WHERE kind=?1 AND (?2 IS NULL OR attempt_id=?2) AND (?3 IS NULL OR payload=?3) ORDER BY seq DESC LIMIT 1",
+                    rusqlite::params![kind, attempt, payload],
+                    |row| row.get::<_, i64>(0),
+                )
+                .unwrap()
+        };
+        let finished = sequence("attempt_finished", Some(&first), None);
+        assert!(sequence("fixture_tool_finished", Some(&first), None) < finished);
+        assert!(finished < sequence("attempt_started", Some(&next), None));
+        assert!(
+            sequence(
+                if from_edit {
+                    "message_edited"
+                } else {
+                    "message_appended"
+                },
+                None,
+                Some(&pending.id)
+            ) < finished
+        );
         client.command(Command::Pause).await.unwrap();
         let cursor = client.snapshot().cursor;
+        let receipts = receipt_count();
         client
             .command_with_id("deliver".into(), command)
             .await
             .unwrap();
         assert!(client.snapshot().paused);
         assert_eq!(client.snapshot().active.unwrap().attempt_id, next);
-        assert_eq!(client.snapshot().cursor, cursor);
+        assert_eq!(receipt_count(), receipts);
+        let Reply::Events(progress) = client
+            .command(Command::Events {
+                after: cursor,
+                limit: 200,
+            })
+            .await
+            .unwrap()
+        else {
+            panic!()
+        };
+        assert!(progress.iter().all(|event| {
+            event.attempt_id.as_deref() == Some(next.as_str())
+                && matches!(
+                    event.kind.as_str(),
+                    "response_checkpoint" | "fixture_tool_started" | "fixture_tool_finished"
+                )
+        }));
         client.shutdown().await.unwrap();
     }
 }
