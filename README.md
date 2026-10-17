@@ -811,6 +811,11 @@ Process-kill tests do not prove protection against physical media failure.
 
 ## Verify
 
+The application gate below remains separate from repository policy/style checks.
+See [CONTRIBUTING.md](CONTRIBUTING.md#verification) for the pinned development
+tools, commit/PR checks and changelog rules. Node and those tools are not needed
+to run AM. Hooks are intentionally absent.
+
 ```sh
 cargo fmt --all --check
 cargo clippy --locked --all-targets -- -D warnings
@@ -853,6 +858,19 @@ native content still moves the content-attached block naturally. These measureme
 do not prove GUI animation quality or universal terminal reflow behavior.
 No real API, tools, shell, project-write diffs or
 coding-agent work is verified.
+
+## Repository Workflow
+
+Changes use signed commits on `type/short-kebab` branches and PRs into `master`,
+merged as merge commits. [AGENTS.md](AGENTS.md#git-authority) records the scoped
+agent authority; merges/releases and remote creation need explicit permission.
+There is currently no remote and no configured server-side ruleset.
+
+The fast CI gate checks commit/PR structure, declared change impact, changelog
+fragments, file validity and its own tests. Separate pinned style/rustfmt checks
+precede the existing Linux/macOS application matrix. Advisory size reports include
+raw/grouped churn and source-file percentages; L/XL PRs need an explanation, not
+an automatic size veto. Details and local commands are in CONTRIBUTING.
 
 ## Future Connections
 

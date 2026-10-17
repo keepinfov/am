@@ -1,0 +1,57 @@
+version = 1
+
+[commit]
+types = ["feat", "fix", "refactor", "perf", "test", "docs", "build", "ci", "chore", "revert"]
+scopes = ["repo", "runtime", "storage", "client", "provider", "config", "artifacts", "docs", "ci", "deps", "release"]
+body_required = ["feat", "fix", "refactor", "perf", "test", "docs"]
+subject_target = 72
+subject_limit = 95
+body_line_limit = 80
+body_paragraph_limit = 2
+prose_min_chars = 20
+prose_min_words = 3
+require_signature = true
+# Mechanical English/imperative guidance, not a claim to prove English grammar.
+nonimperative_start = '^(?:adds|added|adding|fixes|fixed|fixing|updates|updated|updating|changes|changed|changing|implements|implemented|implementing|removes|removed|removing|this|we|i)\b'
+forbidden = ['(?im)^\s*(?:[-*+]\s|\d+[.)]\s|```|~~~)', '(?i)\b(?:co-authored-by|signed-off-by|reviewed-by|tested-by|generated-by)\s*:', '(?i)\b(?:generated (?:with|by)|written by (?:an? )?ai|as an ai|(?:written|authored|implemented|assisted) (?:with|by) (?:chatgpt|claude|copilot))\b', '(?i)\b(?:in this (?:session|conversation)|session (?:recap|summary)|here is (?:a |the )?summary|i (?:have |just )?(?:implemented|fixed|updated)|all tests pass)\b', '(?im)^\s*(?:todo|tbd|n/?a|none|placeholder)\b']
+sync_merge = "^Merge (?:branch|remote-tracking branch) '[^'\\n]+'(?: of [^\\n]+)?(?: into [^\\n]+)?$"
+
+[branch]
+pattern = '^(?:feat|fix|refactor|perf|test|docs|build|ci|chore|revert)/[a-z0-9]+(?:-[a-z0-9]+)*$'
+max_length = 48
+
+[pr]
+base = "master"
+event_max_bytes = 1048576
+required_sections = ["Summary", "Verification", "Change Impact"]
+large_sections = ["Why Together", "Risks", "Review Order"]
+large_labels = ["L", "XL"]
+explanation_min_chars = 20
+explanation_min_words = 3
+placeholder = '(?i)\b(?:todo|tbd|placeholder)\b|^<[^>]+>$|\.{3}|^\[.*\]$|^(?:describe|explain|list|summarize|provide|enter|replace|fill)\s+(?:the|your|this|these|why|how|what)\b|^(?:n/?a|none|not applicable|no changes?|no risks?|fill (?:this|in)|describe (?:the |your )?changes?|explain (?:why|the impact)|list (?:the )?(?:tests|risks)|review order)\s*[.!]?$'
+
+[changelog]
+directory = "changelog.d"
+kinds = ["added", "changed", "fixed", "removed", "security", "breaking"]
+slug_pattern = '[a-z0-9]+(?:-[a-z0-9]+)*'
+exclude = ["changelog.d/README.md"]
+
+[files]
+require_lf = true
+require_final_newline = true
+reject_trailing_whitespace = true
+reject_symlinks = true
+structured_toml = ["*.toml", "Cargo.lock"]
+structured_json = ["*.json"]
+markdown = ["*.md", "*.markdown"]
+conflict_marker = '^(?:<{7}(?: .*)?|={7}|>{7}(?: .*)?|\|{7}(?: .*)?)$'
+
+[size]
+# Upper bounds are exclusive. Only these generated lockfiles leave label churn.
+labels = ["XS", "S", "M", "L", "XL"]
+upper_bounds = [50, 200, 500, 1000]
+generated = ["Cargo.lock", "package-lock.json"]
+source = ["src/**"]
+tests = ["tests/**"]
+docs = ["*.md", "docs/**", "changelog.d/**"]
+tooling = ["scripts/**", ".github/**", ".repo-policy.toml", ".gitignore", ".editorconfig", "*.toml", "*.json", "Makefile", "justfile"]

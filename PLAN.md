@@ -735,6 +735,11 @@ slice below; missing manual/platform evidence is still tracked, not waived.
 
 ### Next Implementation Slice
 
+The repository policy delivery below is not merged into `master`. Integrate it
+only with explicit merge authorization before treating `master` as carrying these
+rules; alternatively agree a separately named dependent branch. Do not mix Stage 2
+implementation into `ci/repository-policy` or merge the policy branch implicitly.
+
 After the final Stage 1 gate, begin a real Stage 2 vertical slice, not a catalog
 of unused profile structs. Recommended first increment:
 
@@ -778,3 +783,69 @@ in the first transport increment. No single slice constitutes Stage 2 acceptance
 - Full Stage 1 manual/platform/performance acceptance remains separate from the
   local automated gate. Record missing evidence instead of blocking all subsequent
   transport work or declaring those checks passed.
+
+### Repository Policy Delivery
+
+Recorded 2026-10-17. The user selected the Git/contribution policy after comparing
+oxidom and slopium, and explicitly requested implementation. This does not change
+the offline runtime contract or implement Stage 2.
+
+- Signed bootstrap `8c50390` establishes the checked Stage 1 baseline on `master`.
+  Raw chat, databases and retained runtime artifacts are excluded. Product decisions
+  remain readable without the unpublished transcript.
+- The working branch is `ci/repository-policy`. Signed commit `0836ac0` contains
+  mechanical baseline formatting only, before the policy implementation.
+- [CONTRIBUTING.md](CONTRIBUTING.md) and `.repo-policy.toml` define the strict
+  Slopium-style commit/PR contract, signed commits, `master` PR merge workflow,
+  automatic branch/commit/push/draft-PR authority only for assigned work and agreed
+  remotes, changelog fragments, and advisory size labels with L/XL explanations.
+- No hooks are created or installed. No Git identity, signing or hook configuration
+  is changed. No remote, push, PR, merge, release, tag or visibility change occurs.
+- `scripts/repo_policy.py` checks files, added commits, PR metadata/fragments and
+  aggregate merge-base size. Raw generated-lockfile totals stay visible; tests/docs
+  count toward review size. Source footprint and churn ratios have distinct meanings.
+- `scripts/check_ci.py` also requires actual GitHub signature verification, not
+  just signature armor. Local armor checks explicitly disclaim authenticity;
+  optional local verification uses existing trust configuration without changing it.
+- CI runs fast policy, pinned style tools and rustfmt before the existing application
+  matrix. An always-reporting `required` job rejects failed/skipped prerequisites.
+- A separate metadata-only `pull_request_target` workflow uses trusted base code,
+  never PR-head code/artifacts, to maintain size labels. It rejects incomplete API
+  pagination and stale heads. API labels have a documented check/write race and
+  do not replace the local Git report or PR justification gate.
+- Node tools, Ruff and actionlint versions are pinned. Actionlint downloads are
+  checksum-checked. A direct Markdownlint API avoids the vulnerable CLI wrapper;
+  the scoped KaTeX security override has compatibility coverage. No application
+  dependency or version changes are introduced.
+- Review order: contract/config, core checker and tests, CI signature orchestration,
+  privileged label boundary and tests, then formatting tooling. This is one cohesive
+  policy bootstrap, but remains an XL review surface; formatting was separated.
+- Main risks are merge/initial-push edge cases, overly broad style/placeholder rules,
+  signing setup and privileged workflow boundaries. Regression cases include real
+  merge parent context, breaking merge subjects, rename/lockfile accounting,
+  fork metadata, changed heads, literal filenames, Rust generics and prose fragments.
+
+Local policy/tool tests passed: 123 policy tests under Python 3.14 and 3.11.15,
+15 tooling tests with installed Node packages under Python 3.14 and 3.11.15,
+and `npm audit --audit-level=low` reported 0 vulnerabilities. Initial check
+failures for the Markdown PR template and generic type explanations were corrected
+with regression tests, not broad lint suppression. The final integrated gate
+below passed locally on Linux on 2026-10-17; it is not remote/macOS CI acceptance.
+
+| Final Policy Delivery Check | Result                                                                            |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| Policy/file/commit checks   | Passed: 123 policy tests, working-tree file checks and signed-history structure   |
+| Tooling regressions         | Passed: 15 tests, including checksum/symlink/filename and Markdown fragment cases |
+| Pinned file style checks    | Passed: Prettier, Markdownlint, Ruff, Taplo and actionlint, in check mode         |
+| Locked tool installation    | `npm ci --ignore-scripts` passed; audit found 0 vulnerabilities                   |
+| Rust/application gate       | Formatting, strict Clippy, 465 Rust tests, build and PTY smoke passed             |
+
+Local checks used the pinned Node/tool versions, with temporary tool installations
+under `/tmp/opencode` and a content-addressed Nix shell for Node/Python. No global
+Git/tool configuration changes were needed. These development tools are not runtime
+dependencies of AM.
+
+Remaining operator work: agree a GitHub destination/visibility, publish only with
+that permission, configure required status/signatures/PR-only rules, and review
+the policy branch before an explicitly authorized merge. No live label application
+or GitHub API verification of these unpublished commits has occurred.
