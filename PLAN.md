@@ -735,10 +735,10 @@ slice below; missing manual/platform evidence is still tracked, not waived.
 
 ### Next Implementation Slice
 
-The repository policy delivery below is not merged into `master`. Integrate it
-only with explicit merge authorization before treating `master` as carrying these
-rules; alternatively agree a separately named dependent branch. Do not mix Stage 2
-implementation into `ci/repository-policy` or merge the policy branch implicitly.
+Repository policy was integrated into `master` by explicitly authorized PR #1
+at `b4c57c2`. The current Stage 1 preview-navigation fix below takes precedence
+over starting Stage 2; keep that fix isolated on its own branch. Subsequent feature
+work starts from the integrated policy, not the obsolete bootstrap branch.
 
 After the final Stage 1 gate, begin a real Stage 2 vertical slice, not a catalog
 of unused profile structs. Recommended first increment:
@@ -934,3 +934,58 @@ Remaining operator work is review and explicit merge authorization, not remote
 creation or basic protection. No merge, release, tag or version change occurred.
 Manual GUI, real-provider, performance and live label-automation evidence remain
 separate from the offline automated acceptance gate.
+
+### Preview Navigation Fix
+
+Current handoff, 2026-10-17: PR #1 was explicitly authorized and merged as
+`b4c57c2`; references above to its draft/unmerged state are historical. The
+[post-merge run](https://github.com/keepinfov/am/actions/runs/39038115748) passed
+policy/style/rustfmt, all Rust checks on both OSes and the full Linux job, but
+macOS PTY failed at the artifact `Preview` assertion with `Message #2` selected.
+Do not present the earlier green PR runs as acceptance of this post-merge failure.
+
+The operator requested a separate fix PR. Work is on
+`fix/history-preview-navigation`, not directly on `master`:
+
+- A deterministic regression seeds real Store history/artifacts, opens the reader
+  through UI commands, holds a real poll-issued history completion, and sends Down
+  then Enter. Before the fix it failed with `Some(Message(2))` instead of the
+  expected action. The failed exact command was
+  `cargo test --locked client::history_integration_tests::background_history_poll_preserves_down_enter_artifact_navigation -- --exact`.
+- The cause is the shared busy flag: a background read incorrectly blocks cached
+  list movement, while Enter still opens the unchanged message selection. Merely
+  waiting for an action row cannot prevent another periodic poll from starting.
+- Foreground page admission and background refresh occupancy are now separate.
+  At most one of each is outstanding; the existing overall command bound remains.
+  Explicit page loads invalidate older background projections, whose successful
+  replies are silently consumed without clearing the foreground busy flag.
+- Four new regressions cover navigation before/after refresh completion, paging
+  during refresh, defensive completion-order permutations, cached reopen and
+  explicit Home/End behavior, and cached-running refresh invalidation without
+  spurious notices. The application worker remains FIFO; defensive reply-order
+  tests are not a claim that the observed failure required reordered worker replies.
+- The PTY check now requires an artifact `Preview` heading, exact action label/status,
+  expected byte count and content in one fresh repaint. Shared assistant text alone
+  cannot satisfy it. No repeated arrows, deadline increases or sleeps hide the bug.
+- Runtime/storage authority, frozen configurations, queue delivery and publication
+  are unchanged. This is a bounded client/read-navigation fix, not Stage 2.
+
+Targeted history integration verification passed 22 tests, including the original
+red regression after the fix. The complete local gate below passed on Linux on
+2026-10-17. Remote acceptance must be checked on the fix PR's exact head; it is
+not inherited from PR #1. Do not merge this fix or mark Stage 2 started without
+the applicable authorization and acceptance evidence.
+
+| Preview Fix Verification                             | Result                                                                                |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `cargo fmt --all --check`                            | Passed                                                                                |
+| `cargo clippy --locked --all-targets -- -D warnings` | Passed                                                                                |
+| `cargo test --locked`                                | 470 passed: 349 library, 1 CLI, 120 integration; none ignored                         |
+| `cargo build --locked`                               | Passed                                                                                |
+| `python3 tests/terminal_smoke.py`                    | Passed with exact fresh-frame artifact metadata checks                                |
+| Policy/style/tooling gates                           | File validity, pinned style checks, 123 policy tests and 15 tooling tests passed      |
+| Live Linux/macOS CI and automatic size label         | Not yet run at local verification; consult the fix PR checks and verification comment |
+
+Next task after this fix is reviewed/integrated and the current CI is green is
+the explicit local Chat Completions slice above. Manual GUI/performance/provider
+acceptance and deprecated Actions-pin updates remain separate follow-ups.

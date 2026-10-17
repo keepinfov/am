@@ -239,8 +239,9 @@ The ruleset is `Protect master` (ID `25301183`) with no bypass actors. Its
 `required` status is bound to the GitHub Actions integration. Recheck live settings
 when changing policy; tracked prose alone is not server enforcement.
 
-The initial policy proposal is [draft PR #1](https://github.com/keepinfov/am/pull/1),
-not an authorized merge. Its size label was applied manually because the trusted
-base does not yet contain the label workflow. Automatic live labeling remains
-unverified until that workflow is available on the default branch. Actual CI
-evidence and remaining gaps are recorded in PLAN section 13.
+The initial policy was merged by explicit authorization in
+[PR #1](https://github.com/keepinfov/am/pull/1). Its size label was applied manually
+because the trusted base did not yet contain the label workflow. That workflow is
+now available on `master`; verify its actual runs on subsequent PRs rather than
+assuming local tests prove live labeling. Actual CI evidence and remaining gaps
+are recorded in PLAN section 13.
