@@ -2,11 +2,11 @@
 # a configurable shortcut. Ctrl+C always keeps its confirmed-exit behavior.
 [keys]
 commands = ["alt+p"]
-focus_input = ["alt+i"] # Toggle focus between the primary and secondary input fields.
+focus_input = ["alt+i"]   # Toggle focus between the primary and secondary input fields.
 help = ["alt+k"]
 history = ["alt+h", "f2"] # Function keys are opt-in, never required.
 details = ["alt+d"]
-stop = [] # Use /stop instead of a potentially accidental hotkey.
+stop = []                 # Use /stop instead of a potentially accidental hotkey.
 
 # Command chains are validated before startup. Maximum 32 bindings, 16 steps each.
 [[keys.macros]]

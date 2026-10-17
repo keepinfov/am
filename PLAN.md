@@ -10,15 +10,15 @@
 
 ## 2. Выбранные решения
 
-| Область | Решение | Когда используется |
-| --- | --- | --- |
-| Язык и async | Rust и Tokio | Этап 1 |
-| Терминал | ratatui и crossterm; основной чат inline; единый alternate-screen журнал по `/history` | Этап 1 |
-| Состояние | SQLite, транзакции, WAL и `synchronous=FULL` | Этап 1 |
-| Конфигурация | Явный TOML и отдельные глобальные UI preferences; precedence по присутствующим полям | Этап 1 |
-| Источник ответа | Детерминированный fake streaming без сети | Этап 1 |
-| Начальный реальный API | Chat Completions: streaming, обычный ответ и fragmented tool calls | Этап 2 |
-| Shell | Управляемое captured-выполнение; PTY и persistent shell не входят автоматически | Этап 3 |
+| Область                | Решение                                                                                | Когда используется |
+| ---------------------- | -------------------------------------------------------------------------------------- | ------------------ |
+| Язык и async           | Rust и Tokio                                                                           | Этап 1             |
+| Терминал               | ratatui и crossterm; основной чат inline; единый alternate-screen журнал по `/history` | Этап 1             |
+| Состояние              | SQLite, транзакции, WAL и `synchronous=FULL`                                           | Этап 1             |
+| Конфигурация           | Явный TOML и отдельные глобальные UI preferences; precedence по присутствующим полям   | Этап 1             |
+| Источник ответа        | Детерминированный fake streaming без сети                                              | Этап 1             |
+| Начальный реальный API | Chat Completions: streaming, обычный ответ и fragmented tool calls                     | Этап 2             |
+| Shell                  | Управляемое captured-выполнение; PTY и persistent shell не входят автоматически        | Этап 3             |
 
 Конкретные HTTP/TLS-библиотеки выбираются на этапе 2 по сетевой матрице, а не только по наличию параметра proxy. Responses, аккаунтный login и другие адаптеры не входят в начальный протокол и не требуют заглушек на этапе 1.
 
@@ -38,15 +38,15 @@
 
 ## 4. Дорожная карта
 
-| Этап | Результат | Статус |
-| --- | --- | --- |
-| 1 | Локальный runtime: один корень, durable-очередь/черновики/ввод, fake streaming и границы доставки, inline чат, единый журнал действий и файловых материалов, кейбинды, отмена и восстановление | Реализовано; текущая проверка в разделе 13 |
-| 2 | Реальный Chat Completions, credentials и все обязательные прокси | Следующий этап; начинать проверяемыми срезами по разделу 13 |
-| 3 | Авторизованные файловые инструменты и captured shell executor | Запланирован; вне текущего объёма |
-| 4 | Дети в том же цикле, свежий и постоянный контекст, роли, заметки, материалы и бюджеты ветки | Запланирован; вне текущего объёма |
-| 5 | Эскалация, unattended-работа, ресурсы, OS-лимиты и управление конфигурацией | Запланирован; вне текущего объёма |
-| 6 | Выбранные, редактируемые и переносимые знания; жизненный цикл хранения | Запланирован; вне текущего объёма |
-| 7 | Итоговая приёмка Linux/macOS: нагрузка, сбои, сеть и реальные терминалы | Запланирован; вне текущего объёма |
+| Этап | Результат                                                                                                                                                                                      | Статус                                                      |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1    | Локальный runtime: один корень, durable-очередь/черновики/ввод, fake streaming и границы доставки, inline чат, единый журнал действий и файловых материалов, кейбинды, отмена и восстановление | Реализовано; текущая проверка в разделе 13                  |
+| 2    | Реальный Chat Completions, credentials и все обязательные прокси                                                                                                                               | Следующий этап; начинать проверяемыми срезами по разделу 13 |
+| 3    | Авторизованные файловые инструменты и captured shell executor                                                                                                                                  | Запланирован; вне текущего объёма                           |
+| 4    | Дети в том же цикле, свежий и постоянный контекст, роли, заметки, материалы и бюджеты ветки                                                                                                    | Запланирован; вне текущего объёма                           |
+| 5    | Эскалация, unattended-работа, ресурсы, OS-лимиты и управление конфигурацией                                                                                                                    | Запланирован; вне текущего объёма                           |
+| 6    | Выбранные, редактируемые и переносимые знания; жизненный цикл хранения                                                                                                                         | Запланирован; вне текущего объёма                           |
+| 7    | Итоговая приёмка Linux/macOS: нагрузка, сбои, сеть и реальные терминалы                                                                                                                        | Запланирован; вне текущего объёма                           |
 
 Проверки добавляются вместе с механизмами каждого этапа. Этап 7 объединяет доказательства и сквозные сценарии, а не откладывает все тесты до конца.
 
@@ -165,22 +165,22 @@ Fake работает по локальному сценарию: фиксиро
 
 Ниже целевые критерии приёмки. Подтверждённый объём проверки и ограничения перечислены в разделе 5.11; эта таблица сама по себе не доказывает устойчивость при физическом отключении питания или поведение на всех платформах.
 
-| Проверка | Критерий |
-| --- | --- |
-| Повторяемый сценарий | Один набор команд и fake-событий даёт одинаковую последовательность значимых состояний и сохранённый текст |
-| Сообщение во время streaming | Сохранено в очереди, но не принято до `idle`; UI остаётся доступным |
-| Edit/dequeue race | Либо выдана lease и dequeue запрещён, либо принятие уже произошло и edit получает конфликт |
-| Finish/cancel edit | Новая версия либо исходный текст возвращаются на прежнее место; незавершённая правка не обрабатывается |
-| Esc и следующий ход | Отменён выбранный ID; очередь сохранена; следующий ход начинается только после подтверждения отмены |
-| Ctrl+C | Первый вызов требует подтверждения; подтверждённый выход сохраняет очередь и восстанавливает терминал |
-| Второй writer | Одновременное открытие той же сессии на запись отклонено, без обхода lock |
-| Crash до/после commit и ACK | ACK не опережает commit; подтверждённые переходы доступны; повтор command ID не дублирует действие |
-| Crash во время streaming/edit | Виден durable-префикс, возможный loss tail и прерванный ход; lease снята; auto-resume отсутствует |
-| Full disk/ошибка SQLite | Нет успешного ACK или бесконечного буферизования; runtime показывает остановку новых действий |
-| Snapshot во время изменений | Снимок и курсор не пропускают и не удваивают критичные переходы при последующей доставке |
-| Медленный/отключённый UI | Runtime не ждёт доставки; клиент восстанавливается снимком; bounded memory сохраняется |
-| Длинная история/быстрый fake | Память соответствует заданным бюджетам, страницы и ввод доступны, весь журнал не рендерится на каждый кадр |
-| Терминальные сценарии | Resize, Unicode, paste, fullscreen/inline и обработанные ошибки не теряют подтверждённые сообщения и не оставляют terminal modes включёнными |
+| Проверка                      | Критерий                                                                                                                                     |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Повторяемый сценарий          | Один набор команд и fake-событий даёт одинаковую последовательность значимых состояний и сохранённый текст                                   |
+| Сообщение во время streaming  | Сохранено в очереди, но не принято до `idle`; UI остаётся доступным                                                                          |
+| Edit/dequeue race             | Либо выдана lease и dequeue запрещён, либо принятие уже произошло и edit получает конфликт                                                   |
+| Finish/cancel edit            | Новая версия либо исходный текст возвращаются на прежнее место; незавершённая правка не обрабатывается                                       |
+| Esc и следующий ход           | Отменён выбранный ID; очередь сохранена; следующий ход начинается только после подтверждения отмены                                          |
+| Ctrl+C                        | Первый вызов требует подтверждения; подтверждённый выход сохраняет очередь и восстанавливает терминал                                        |
+| Второй writer                 | Одновременное открытие той же сессии на запись отклонено, без обхода lock                                                                    |
+| Crash до/после commit и ACK   | ACK не опережает commit; подтверждённые переходы доступны; повтор command ID не дублирует действие                                           |
+| Crash во время streaming/edit | Виден durable-префикс, возможный loss tail и прерванный ход; lease снята; auto-resume отсутствует                                            |
+| Full disk/ошибка SQLite       | Нет успешного ACK или бесконечного буферизования; runtime показывает остановку новых действий                                                |
+| Snapshot во время изменений   | Снимок и курсор не пропускают и не удваивают критичные переходы при последующей доставке                                                     |
+| Медленный/отключённый UI      | Runtime не ждёт доставки; клиент восстанавливается снимком; bounded memory сохраняется                                                       |
+| Длинная история/быстрый fake  | Память соответствует заданным бюджетам, страницы и ввод доступны, весь журнал не рендерится на каждый кадр                                   |
+| Терминальные сценарии         | Resize, Unicode, paste, fullscreen/inline и обработанные ошибки не теряют подтверждённые сообщения и не оставляют terminal modes включёнными |
 
 Для гонок нужны управляемый scheduler/барьеры, для recovery и lock нужны subprocess-тесты, для хранения нужны fault injection и остановка процесса вокруг транзакций. Проверка остановкой процесса не доказывает устойчивость при физическом отключении питания. Порог отзывчивости, размер тестовой истории и эталонная машина фиксируются перед измерениями; произвольный FPS не обещается.
 
@@ -290,12 +290,12 @@ SQLite page quota по умолчанию 64 MiB. Перед изменения�
 
 Единый синтаксис: `/settings <key> <value> [--default]`. Bare `/settings` и `/settings <key>` готовят inline-ввод аргументов. Завершение token не применяет настройку; применяется только полная валидная команда по отдельному execute Enter. После value и whitespace предлагается option `--default` с описанием **Make default**, а не Apply stage.
 
-| Command key | Допустимые значения | Built-in default | TOML `[interface]` |
-| --- | --- | --- | --- |
-| `status-line` | `true`, `false` | `true` | `status_line` |
-| `prompt-history` | `true`, `false` | `true` | `prompt_history` |
-| `status` | `text`, `braille`, `minimal` | `text` | `status_preset` |
-| `status-color` | `true`, `false` | `false` | `status_color` |
+| Command key      | Допустимые значения          | Built-in default | TOML `[interface]` |
+| ---------------- | ---------------------------- | ---------------- | ------------------ |
+| `status-line`    | `true`, `false`              | `true`           | `status_line`      |
+| `prompt-history` | `true`, `false`              | `true`           | `prompt_history`   |
+| `status`         | `text`, `braille`, `minimal` | `text`           | `status_preset`    |
+| `status-color`   | `true`, `false`              | `false`          | `status_color`     |
 
 - Без flag изменение действует **только в текущем клиенте до выхода**, не в durable session, SQLite или другом клиенте.
 - `--default` сохраняет только выбранное поле в глобальный `preferences.toml` platform user config directory (`~/.config/am/preferences.toml` обычно на Linux). `--preferences FILE` явно переопределяет путь, в том числе для изолированных headless/CI fixtures. Это не проектный config и не provider/credentials store.
@@ -339,17 +339,17 @@ src/provider.rs              deterministic offline fake producer
 
 Локальная проверка Linux проведена на `rustc 1.99.0-nightly (0e29c21d9 2026-07-21)`. Per-field provenance подключён при старте до raw mode; неиспользуемый `menu_above` удалён. Финальное ревью также добавило проверки сохранения defaults при выходе/закрытии палитры и whole-grapheme truncation при вставке возле лимита. Исходные 62 теста из 5.11 остаются результатом прежней итерации.
 
-| Проверка версии 5.16 (история) | Результат |
-| --- | --- |
-| `cargo fmt --all --check` | Пройдено |
-| `cargo clippy --locked --all-targets -- -D warnings` | Пройдено |
-| `cargo test --locked` | Пройдено: 159 тестов (133 library, 1 CLI, 25 integration) |
-| `cargo build --locked`, headless smoke | Пройдено; isolated session/preferences, shipped TOML, fake completion |
-| `python3 tests/terminal_smoke.py` | Пройдено: fish completion, defaults/restart, inline panels, explicit fullscreen, Unicode, queue/edit, shortcuts, Ctrl+C, SIGTERM и termios |
-| Виртуальный терминал pyte | Пройдено 105 assertions: реальный DSR cursor, 45 shell sentinel lines без потерь/дублей, completion под вводом, preview/rollback, Unicode caret, resize, fullscreen return и restoration |
-| Renderer и provenance | Проверены тестами; pager без tutorial и Apply, source по каждому полю в details |
-| Latency/RSS, машина, лимиты, размер истории | Количественные измерения не проводились |
-| Linux/macOS CI и реальные terminal emulators | Не подтверждены этой правкой |
+| Проверка версии 5.16 (история)                       | Результат                                                                                                                                                                                |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cargo fmt --all --check`                            | Пройдено                                                                                                                                                                                 |
+| `cargo clippy --locked --all-targets -- -D warnings` | Пройдено                                                                                                                                                                                 |
+| `cargo test --locked`                                | Пройдено: 159 тестов (133 library, 1 CLI, 25 integration)                                                                                                                                |
+| `cargo build --locked`, headless smoke               | Пройдено; isolated session/preferences, shipped TOML, fake completion                                                                                                                    |
+| `python3 tests/terminal_smoke.py`                    | Пройдено: fish completion, defaults/restart, inline panels, explicit fullscreen, Unicode, queue/edit, shortcuts, Ctrl+C, SIGTERM и termios                                               |
+| Виртуальный терминал pyte                            | Пройдено 105 assertions: реальный DSR cursor, 45 shell sentinel lines без потерь/дублей, completion под вводом, preview/rollback, Unicode caret, resize, fullscreen return и restoration |
+| Renderer и provenance                                | Проверены тестами; pager без tutorial и Apply, source по каждому полю в details                                                                                                          |
+| Latency/RSS, машина, лимиты, размер истории          | Количественные измерения не проводились                                                                                                                                                  |
+| Linux/macOS CI и реальные terminal emulators         | Не подтверждены этой правкой                                                                                                                                                             |
 
 Перечисленные interaction-сценарии покрыты Rust/PTY-проверками. Pyte является дополнительной виртуальной моделью терминала, а не проверкой GUI-эмулятора или macOS. Его resize обрезает native rows, а не моделирует их reflow; реальные scrollback/reflow и платформа macOS остаются непроверенными. Test harness и evidence находятся только в `/tmp/opencode`, pyte не добавлен в зависимости проекта. Subprocess kill не доказывает durability при отключении питания. Stable toolchain и remote CI на этом устройстве не проверены.
 
@@ -379,12 +379,12 @@ src/provider.rs              deterministic offline fake producer
 
 #### Локальные Исходы И Ошибки
 
-| Saved history record | Когда появляется |
-| --- | --- |
-| `status-color enabled` | После применения валидного локального изменения |
+| Saved history record              | Когда появляется                                                      |
+| --------------------------------- | --------------------------------------------------------------------- |
+| `status-color enabled`            | После применения валидного локального изменения                       |
 | `status set to braille (default)` | После подтверждённой записи выбранного default и применения в клиенте |
-| `paused` | После ACK управления паузой |
-| `error: ...` | Краткая санитизированная ошибка; durable только при успешной записи |
+| `paused`                          | После ACK управления паузой                                           |
+| `error: ...`                      | Краткая санитизированная ошибка; durable только при успешной записи   |
 
 Другие завершённые локальные control/edit/cancel-исходы также могут иметь короткую notice. Plain notice не форматируется как assistant Markdown и не получает повторных status tags. Открытие/закрытие панелей, навигация, read replies, polling, timer/spinner frames не засоряют историю.
 
@@ -443,21 +443,21 @@ src/provider.rs              deterministic offline fake producer
 
 Локальная проверка проведена на Linux с тем же Rust nightly. Исторические результаты 5.16/5.17 не подменяют следующие запуски текущей версии.
 
-| Проверка текущей версии 5.18 | Результат |
-| --- | --- |
-| `cargo fmt --all --check` | Пройдено |
-| `cargo clippy --locked --all-targets -- -D warnings` | Пройдено |
-| `cargo test --locked` | 185 тестов: 153 library, 1 CLI, 31 integration; все пройдены |
-| V1 migration: seq/high-water mark, indexes, receipts, FK; notice validation/replay | Пройдено, включая rollback при ошибке записи и одинаковые receipt rows после reopen |
-| Provider error в final transaction; notices не меняют inputs/queue/leases | Пройдено |
-| Bounded/deduplicated errors, 16-entry guard, nonrecursive storage failure, quit/default-write failure | Пройдено |
-| Native notices/receipt ranges, page size 1/50, response offset/reader anchor | Пройдено: 100 notices не ждут завершения ответа и не печатаются повторно |
-| Root geometry, fixed pager budget, tiny/resize, один gap и welcome | Пройдено Rust/PTY/pyte проверками |
-| `cargo build --locked`, isolated headless smoke | Пройдено; новая сессия/isolated preferences и shipped TOML |
-| `python3 tests/terminal_smoke.py` | Пройдено: durable info/error/status/restart, ACK-order, fast quit/default/SIGTERM, inline/fullscreen, UTF-8, mode 2026 framing и termios |
-| Pyte + live PTY | 172 assertions, 0 failures; 6 сценариев/8 процессов, ровно 1 startup DSR на процесс, стабильный composer при filtering/search/open/close с запасом места, 8 необходимых scroll rows у нижнего края, один gap, Unicode, notices при streaming и полный 511-byte ответ |
-| Remote Linux/macOS CI, реальные GUI terminals | Не проверены этой правкой |
-| Long-history performance, latency/RSS и эталонная машина | Не измерены; обещаний численной производительности нет |
+| Проверка текущей версии 5.18                                                                          | Результат                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cargo fmt --all --check`                                                                             | Пройдено                                                                                                                                                                                                                                                             |
+| `cargo clippy --locked --all-targets -- -D warnings`                                                  | Пройдено                                                                                                                                                                                                                                                             |
+| `cargo test --locked`                                                                                 | 185 тестов: 153 library, 1 CLI, 31 integration; все пройдены                                                                                                                                                                                                         |
+| V1 migration: seq/high-water mark, indexes, receipts, FK; notice validation/replay                    | Пройдено, включая rollback при ошибке записи и одинаковые receipt rows после reopen                                                                                                                                                                                  |
+| Provider error в final transaction; notices не меняют inputs/queue/leases                             | Пройдено                                                                                                                                                                                                                                                             |
+| Bounded/deduplicated errors, 16-entry guard, nonrecursive storage failure, quit/default-write failure | Пройдено                                                                                                                                                                                                                                                             |
+| Native notices/receipt ranges, page size 1/50, response offset/reader anchor                          | Пройдено: 100 notices не ждут завершения ответа и не печатаются повторно                                                                                                                                                                                             |
+| Root geometry, fixed pager budget, tiny/resize, один gap и welcome                                    | Пройдено Rust/PTY/pyte проверками                                                                                                                                                                                                                                    |
+| `cargo build --locked`, isolated headless smoke                                                       | Пройдено; новая сессия/isolated preferences и shipped TOML                                                                                                                                                                                                           |
+| `python3 tests/terminal_smoke.py`                                                                     | Пройдено: durable info/error/status/restart, ACK-order, fast quit/default/SIGTERM, inline/fullscreen, UTF-8, mode 2026 framing и termios                                                                                                                             |
+| Pyte + live PTY                                                                                       | 172 assertions, 0 failures; 6 сценариев/8 процессов, ровно 1 startup DSR на процесс, стабильный composer при filtering/search/open/close с запасом места, 8 необходимых scroll rows у нижнего края, один gap, Unicode, notices при streaming и полный 511-byte ответ |
+| Remote Linux/macOS CI, реальные GUI terminals                                                         | Не проверены этой правкой                                                                                                                                                                                                                                            |
+| Long-history performance, latency/RSS и эталонная машина                                              | Не измерены; обещаний численной производительности нет                                                                                                                                                                                                               |
 
 PTY и virtual terminal не доказывают поведение реального GUI-эмулятора, reflow scrollback на всех платформах или поддержку mode 2026 всеми терминалами. Subprocess kill не доказывает сохранность при физическом отказе диска/питания. Stable/macOS/remote CI и длительная нагрузка остаются отдельной проверкой, не выводом из документации.
 
@@ -600,13 +600,13 @@ at 1,1; it is not an emulator and does not assert visual geometry or GUI behavio
 
 Final integrated verification on Linux:
 
-| Check | Result |
-| --- | --- |
-| `cargo fmt --all --check` | Passed |
-| `cargo clippy --locked --all-targets -- -D warnings` | Passed |
-| `cargo test --locked` | 313 passed: 222 library, 1 CLI, 90 integration; none ignored |
-| `cargo build --locked` | Passed |
-| `python3 tests/terminal_smoke.py` | Passed |
+| Check                                                | Result                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------ |
+| `cargo fmt --all --check`                            | Passed                                                       |
+| `cargo clippy --locked --all-targets -- -D warnings` | Passed                                                       |
+| `cargo test --locked`                                | 313 passed: 222 library, 1 CLI, 90 integration; none ignored |
+| `cargo build --locked`                               | Passed                                                       |
+| `python3 tests/terminal_smoke.py`                    | Passed                                                       |
 
 The PTY run includes pinned fields, draft ID completion/consumption, checked pause
 choices, braille during paused dequeue, raw slash/multiline input, visual `d`
@@ -692,25 +692,25 @@ Stage 1 defects and proceeding to Stage 2 in tested increments.
 
 - [x] Record agreed architecture, precedence and agent entry point.
 - [x] Re-run baseline: `cargo test --locked` passed 459 Rust tests (341 library,
-  1 CLI, 117 integration); `cargo fmt --all --check` passed.
+      1 CLI, 117 integration); `cargo fmt --all --check` passed.
 - [x] Reproduce the journal defect through real Store/client polling: an action
-  cached while running stays stale because completion updates its existing sequence
-  while forward polling reads only greater sequences.
+      cached while running stays stale because completion updates its existing sequence
+      while forward polling reads only greater sequences.
 - [x] Add bounded independent refresh of cached running actions, preserving forward
-  pagination, browsing, selection and cache bounds. Reopen artifact EOF only when
-  updated metadata proves new bytes exist. Refresh is read-only.
+      pagination, browsing, selection and cache bounds. Reopen artifact EOF only when
+      updated metadata proves new bytes exist. Refresh is read-only.
 - [x] Add regressions for completion/cancellation, empty preview growth, page-size-1
-  catch-up, round-robin fairness, stale replies and unchanged durable record counts.
-  Completion/growth setup uses deterministic Store transitions; a separate real
-  Client test checks runtime request routing and page-one catch-up.
+      catch-up, round-robin fairness, stale replies and unchanged durable record counts.
+      Completion/growth setup uses deterministic Store transitions; a separate real
+      Client test checks runtime request routing and page-one catch-up.
 - [x] Fix an existing read-side effect: artifact metadata/output reads no longer
-  `chmod` files. Creation stays private and explicit append still hardens permissions.
-  Unix Client-command tests assert unchanged mode/ctime/content/events/receipts;
-  normal filesystem access-time updates are not excluded by this guarantee.
+      `chmod` files. Creation stays private and explicit append still hardens permissions.
+      Unix Client-command tests assert unchanged mode/ctime/content/events/receipts;
+      normal filesystem access-time updates are not excluded by this guarantee.
 - [x] Cover nonempty EOF growth through normal preview paging, preserving the old
-  page/scroll until the next page is requested. Remove timed completion setup.
+      page/scroll until the next page is requested. Remove timed completion setup.
 - [x] Run and record the complete final gate below. No Stage 2 production behavior
-  has been implemented in this iteration.
+      has been implemented in this iteration.
 
 ### Current Verification
 
@@ -719,13 +719,13 @@ after the final code changes. The journal refresh regression failed before its f
 the artifact-read regression failed before its fix because Actions changed 0400
 permissions to 0600. Both now pass.
 
-| Command | Current Result |
-| --- | --- |
-| `cargo fmt --all --check` | Passed |
-| `cargo clippy --locked --all-targets -- -D warnings` | Passed |
-| `cargo test --locked` | 465 passed: 345 library, 1 CLI, 119 integration; none ignored |
-| `cargo build --locked` | Passed |
-| `python3 tests/terminal_smoke.py` | Passed; emitted sequences/persisted state, not emulator geometry |
+| Command                                              | Current Result                                                   |
+| ---------------------------------------------------- | ---------------------------------------------------------------- |
+| `cargo fmt --all --check`                            | Passed                                                           |
+| `cargo clippy --locked --all-targets -- -D warnings` | Passed                                                           |
+| `cargo test --locked`                                | 465 passed: 345 library, 1 CLI, 119 integration; none ignored    |
+| `cargo build --locked`                               | Passed                                                           |
+| `python3 tests/terminal_smoke.py`                    | Passed; emitted sequences/persisted state, not emulator geometry |
 
 Do not reinterpret historical pyte screenshots/checks or earlier CI reports as
 new evidence. macOS, remote CI, manual GUI terminals and long-history latency/RSS
@@ -734,6 +734,11 @@ The local automated Stage 1 gate is green. The next coding task is the Stage 2
 slice below; missing manual/platform evidence is still tracked, not waived.
 
 ### Next Implementation Slice
+
+The repository policy delivery below is not merged into `master`. Integrate it
+only with explicit merge authorization before treating `master` as carrying these
+rules; alternatively agree a separately named dependent branch. Do not mix Stage 2
+implementation into `ci/repository-policy` or merge the policy branch implicitly.
 
 After the final Stage 1 gate, begin a real Stage 2 vertical slice, not a catalog
 of unused profile structs. Recommended first increment:
@@ -778,3 +783,154 @@ in the first transport increment. No single slice constitutes Stage 2 acceptance
 - Full Stage 1 manual/platform/performance acceptance remains separate from the
   local automated gate. Record missing evidence instead of blocking all subsequent
   transport work or declaring those checks passed.
+
+### Repository Policy Delivery
+
+Recorded 2026-10-17. The user selected the Git/contribution policy after comparing
+oxidom and slopium, and explicitly requested implementation. This does not change
+the offline runtime contract or implement Stage 2.
+
+- Signed bootstrap `8c50390` establishes the checked Stage 1 baseline on `master`.
+  Raw chat, databases and retained runtime artifacts are excluded. Product decisions
+  remain readable without the unpublished transcript.
+- The working branch is `ci/repository-policy`. Signed commit `0836ac0` contains
+  mechanical baseline formatting only, before the policy implementation.
+- [CONTRIBUTING.md](CONTRIBUTING.md) and `.repo-policy.toml` define the strict
+  Slopium-style commit/PR contract, signed commits, `master` PR merge workflow,
+  automatic branch/commit/push/draft-PR authority only for assigned work and agreed
+  remotes, changelog fragments, and advisory size labels with L/XL explanations.
+- No hooks were created or installed, and no Git identity/signing/hook configuration
+  changed. Initial delivery was local; subsequent authorized publication is recorded
+  below. Merge, release and tags remain separately controlled.
+- `scripts/repo_policy.py` checks files, added commits, PR metadata/fragments and
+  aggregate merge-base size. Raw generated-lockfile totals stay visible; tests/docs
+  count toward review size. Source footprint and churn ratios have distinct meanings.
+- `scripts/check_ci.py` also requires actual GitHub signature verification, not
+  just signature armor. Local armor checks explicitly disclaim authenticity;
+  optional local verification uses existing trust configuration without changing it.
+- CI runs fast policy, pinned style tools and rustfmt before the existing application
+  matrix. An always-reporting `required` job rejects failed/skipped prerequisites.
+- A separate metadata-only `pull_request_target` workflow uses trusted base code,
+  never PR-head code/artifacts, to maintain size labels. It rejects incomplete API
+  pagination and stale heads. API labels have a documented check/write race and
+  do not replace the local Git report or PR justification gate.
+- Node tools, Ruff and actionlint versions are pinned. Actionlint downloads are
+  checksum-checked. A direct Markdownlint API avoids the vulnerable CLI wrapper;
+  the scoped KaTeX security override has compatibility coverage. No application
+  dependency or version changes are introduced.
+- Review order: contract/config, core checker and tests, CI signature orchestration,
+  privileged label boundary and tests, then formatting tooling. This is one cohesive
+  policy bootstrap, but remains an XL review surface; formatting was separated.
+- Main risks are merge/initial-push edge cases, overly broad style/placeholder rules,
+  signing setup and privileged workflow boundaries. Regression cases include real
+  merge parent context, breaking merge subjects, rename/lockfile accounting,
+  fork metadata, changed heads, literal filenames, Rust generics and prose fragments.
+
+Local policy/tool tests passed: 123 policy tests under Python 3.14 and 3.11.15,
+15 tooling tests with installed Node packages under Python 3.14 and 3.11.15,
+and `npm audit --audit-level=low` reported 0 vulnerabilities. Initial check
+failures for the Markdown PR template and generic type explanations were corrected
+with regression tests, not broad lint suppression. The final integrated gate
+below passed locally on Linux on 2026-10-17; it is not remote/macOS CI acceptance.
+
+| Final Policy Delivery Check | Result                                                                            |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| Policy/file/commit checks   | Passed: 123 policy tests, working-tree file checks and signed-history structure   |
+| Tooling regressions         | Passed: 15 tests, including checksum/symlink/filename and Markdown fragment cases |
+| Pinned file style checks    | Passed: Prettier, Markdownlint, Ruff, Taplo and actionlint, in check mode         |
+| Locked tool installation    | `npm ci --ignore-scripts` passed; audit found 0 vulnerabilities                   |
+| Rust/application gate       | Formatting, strict Clippy, 465 Rust tests, build and PTY smoke passed             |
+
+Local checks used the pinned Node/tool versions, with temporary tool installations
+under `/tmp/opencode` and a content-addressed Nix shell for Node/Python. No global
+Git/tool configuration changes were needed. These development tools are not runtime
+dependencies of AM.
+
+### GitHub Publication
+
+On 2026-10-17 the operator approved public `keepinfov/am` creation, followed by
+the proposed baseline/branch publication and protection setup, but not merge.
+
+- Upstream is [keepinfov/am](https://github.com/keepinfov/am), public. `origin` uses
+  its SSH URL. `master` contains only baseline `8c50390`; policy work remains on
+  `ci/repository-policy` in [draft PR #1](https://github.com/keepinfov/am/pull/1).
+- Repository merge settings allow merge commits only, use PR-title merge subjects
+  and blank bodies, delete merged branches and disable auto-merge.
+- Active `Protect master` ruleset ID `25301183` requires PRs and verified signed
+  commits, blocks deletion/non-fast-forward pushes, and has no bypass actors.
+  No second approving reviewer is mandatory. `required` is required from GitHub
+  Actions integration `15368`, without requiring the branch to be up to date.
+- All five published commits through `1ff51c8` were verified by the GitHub API:
+  `verified: true`, `reason: valid`. Local presence-only checks were not used as
+  proof of cryptographic trust.
+- Five size labels were created and `size/XL` applied to PR #1. The labeling
+  workflow cannot execute trusted base code until it exists on `master`; this
+  manual bootstrap is not evidence of successful live label automation.
+- [First live policy run](https://github.com/keepinfov/am/actions/runs/39030017666)
+  passed policy/style/rustfmt but failed macOS delivery and Linux read-only tests.
+  The original baseline run also failed; it remains historical evidence, not a
+  successful acceptance report for `master`.
+- The Linux failure exposed duplicate watch publication: an already-published
+  mutation left a batch dirty flag set, causing read-side/end-of-batch updates.
+  `f303718` separates command publication from subsequent provider progress,
+  preserving publication before ACK and fault visibility. A real-client regression
+  covers repeated idle mutation/read cycles without weakening the read-only test.
+- The macOS failure was a test assumption: the shared event cursor can advance
+  while a producer is streaming. Rejection/replay now check receipt counts, queued
+  state and allowed producer-event ownership, plus command-before-completion and
+  tool-finish/attempt-finish/successor-start ordering. No sleeps, skips or larger
+  timing thresholds replace those assertions. A user-facing fragment records the
+  runtime correction; PR impact is now user-facing.
+- Local re-verification after `f303718` passed formatting, strict Clippy, 466 Rust
+  tests (345 library, 1 CLI, 120 integration), build, terminal smoke and pinned
+  style/file checks. The 123 policy and 15 tooling tests remain unchanged.
+- [Follow-up run at `f303718`](https://github.com/keepinfov/am/actions/runs/39031422150)
+  passed the full Linux gate, but macOS exposed a lexical test-path mismatch:
+  its `/var` temporary root aliases `/private/var`. `1ff51c8` fixes the expected
+  session parent in that test, preserving strict filename/UUID/permission checks
+  and leaving production canonicalization/symlink protection unchanged.
+- [Successful live run at `1ff51c8`](https://github.com/keepinfov/am/actions/runs/39031843697)
+  passed policy, style, rustfmt, both application jobs and `required`. Actual job
+  logs independently confirm 466 Rust tests passed, 0 failed/ignored on each OS,
+  plus build and terminal smoke. The macOS job took 3m56s; Linux took 2m47s.
+  These are one run's observations, not performance guarantees.
+- The successful run reports deprecation warnings from older pinned Actions:
+  their Node 20 runtimes are forced to Node 24, with a `punycode` warning. Refresh
+  those pins in a reviewed follow-up; no warning suppression or weakened gate was
+  used to obtain the pass.
+
+| Live Acceptance At `1ff51c8`  | Evidence                                                                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Policy/style/rustfmt/required | All successful in run `39031843697`                                                                                                         |
+| Linux application             | [Job `117393792690`](https://github.com/keepinfov/am/actions/runs/39031843697/job/117393792690): strict Clippy, 466 tests, build, PTY smoke |
+| macOS application             | [Job `117393792649`](https://github.com/keepinfov/am/actions/runs/39031843697/job/117393792649): strict Clippy, 466 tests, build, PTY smoke |
+
+Earlier statements that macOS/remote CI were unverified describe the initial
+local delivery, not this new platform evidence. This publication-evidence update
+is documentation-only; its final head must still pass the same required checks.
+
+The [subsequent run at `9fb6a31`](https://github.com/keepinfov/am/actions/runs/39032403673)
+again passed all Rust checks on both platforms and the full Linux job, but macOS
+PTY exposed a harness ACK race: an empty SQLite composer is not proof that the UI
+has consumed a submission ACK and released its input guard. The smoke now verifies
+each new ordinary-send receipt and exact payload, then waits for a freshly rendered
+normal Root frame without `saving input` before further typing. It does not wait
+for generation to finish or redefine the durable shadow-composer helper.
+
+The same explicit barrier covers the natural/batch/stop/edit accumulation paths.
+Tool-boundary observations precede optional animation/edit work, and idle status is
+observed after transient feedback instead of assuming its timeout has elapsed.
+No deadline increase, larger sleep or skipped FIFO/full-turn/no-steering/duplicate
+assertion was used. The full revised PTY smoke and pinned Python checks passed
+locally. This is a harness-only follow-up; the new published head must still pass
+the live Linux/macOS gate.
+
+For later heads, use [PR #1 checks](https://github.com/keepinfov/am/pull/1/checks)
+and its publication-verification comment as current evidence; the immutable runs
+above describe their exact historical commits, not automatic acceptance of a newer
+head. Keep this distinction when handing off or making an explicit merge decision.
+
+Remaining operator work is review and explicit merge authorization, not remote
+creation or basic protection. No merge, release, tag or version change occurred.
+Manual GUI, real-provider, performance and live label-automation evidence remain
+separate from the offline automated acceptance gate.

@@ -1,0 +1,8 @@
+include = ["**/*.toml"]
+exclude = ["target/**", "node_modules/**", ".git/**", ".venv/**"]
+
+[formatting]
+indent_string = "  "
+reorder_keys = false
+# The npm WASM build panics when width expansion revisits a long inline comment.
+array_auto_expand = false

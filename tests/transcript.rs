@@ -304,6 +304,29 @@ async fn inputs_return_latest_saved_text_across_states_in_chronological_order() 
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn acknowledged_idle_mutations_do_not_publish_again_during_reads() {
+    let directory = tempfile::tempdir().unwrap();
+    let client = Client::start(&directory.path().join("session.sqlite3"), Config::default())
+        .await
+        .unwrap();
+    let mut snapshots = client.subscribe();
+    for _ in 0..32 {
+        client.command(Command::Pause).await.unwrap();
+        let acknowledged = snapshots.borrow_and_update().clone();
+        assert!(acknowledged.paused);
+        for _ in 0..2 {
+            assert!(matches!(
+                client.command(Command::Composer).await.unwrap(),
+                Reply::Composer(_)
+            ));
+        }
+        assert!(!snapshots.has_changed().unwrap());
+        assert_eq!(client.snapshot().cursor, acknowledged.cursor);
+    }
+    client.shutdown().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn focused_reads_have_no_receipts_events_or_snapshot_side_effects() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("session.sqlite3");

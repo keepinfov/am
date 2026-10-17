@@ -1,0 +1,9 @@
+# Local conversations and generated/dependency files are not source documents.
+chat-history.txt
+Cargo.lock
+package-lock.json
+.git/
+node_modules/
+target/
+.venv/
+__pycache__/

@@ -297,8 +297,13 @@ fn output_pages_are_bounded_utf8_safe_and_have_private_generated_paths() {
     assert_eq!(output(&store), record);
     assert_eq!(store.cursor().unwrap(), cursor);
     uuid::Uuid::parse_str(&record.id).unwrap();
+    // Store resolves session-parent aliases, including macOS /var -> /private/var.
     let expected = path
-        .with_file_name("session.sqlite3.artifacts")
+        .parent()
+        .unwrap()
+        .canonicalize()
+        .unwrap()
+        .join("session.sqlite3.artifacts")
         .join(format!("{}.txt", record.id));
     assert_eq!(std::path::Path::new(&record.path), expected);
     #[cfg(unix)]

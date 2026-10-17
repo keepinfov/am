@@ -66,24 +66,24 @@ Local outcomes are saved as short categorized records. The command field, drafts
 stop-only controls and journal below are the current contract; previous iterations
 and their historical verification remain in [PLAN.md](PLAN.md).
 
-| Command | Action | Default Shortcut |
-| --- | --- | --- |
-| `/commands [keep]` | Secondary command field; `keep` pins it beside the retained primary composer | Ctrl+P |
-| `/exit` | Close the command field, not the application | None |
-| `/help` | Interactive command catalog with categories, search and effective shortcuts | None |
-| `/history [fullscreen\|<seq>]` | Fullscreen list/preview; sequence anchor, or type a fragment and Tab to search saved dialogue | Ctrl+O toggles reader |
-| `/settings [<key> <value> [--default]]` | Open UI preferences, or change one value and optionally save its global default | None |
-| `/details` | Runtime IDs, event cursor, response checkpoints | Alt+D |
-| `/stop` | Cancel selected active work; run queued input FIFO, or pause if none is queued | Esc twice within 700 ms in the plain primary root |
-| `/quit` | Request exit; finish pending saves/notices, then shut down | Ctrl+C twice within 3 seconds |
-| `/clear-draft` | Clear the unsent draft | Ctrl+U |
-| `/draft save` | Save primary text under a generated draft ID, from the secondary field | None |
-| `/draft delete <id-prefix>` | Delete a saved draft after ID/revision validation | Delete in drafts |
-| `/drafts` | List saved drafts; Enter loads a copy | None |
-| `/send <draft-id>` | Atomically submit and consume a saved draft, resuming if paused | None |
-| `/bindings` | Visual command-shortcut editor | None |
-| `/bind <key> /command [ ; /command ...] [--default]` | Bind a chord to a validated command chain | None |
-| `/unbind <key> [--default]` | Remove a command shortcut | None |
+| Command                                              | Action                                                                                        | Default Shortcut                                  |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `/commands [keep]`                                   | Secondary command field; `keep` pins it beside the retained primary composer                  | Ctrl+P                                            |
+| `/exit`                                              | Close the command field, not the application                                                  | None                                              |
+| `/help`                                              | Interactive command catalog with categories, search and effective shortcuts                   | None                                              |
+| `/history [fullscreen\|<seq>]`                       | Fullscreen list/preview; sequence anchor, or type a fragment and Tab to search saved dialogue | Ctrl+O toggles reader                             |
+| `/settings [<key> <value> [--default]]`              | Open UI preferences, or change one value and optionally save its global default               | None                                              |
+| `/details`                                           | Runtime IDs, event cursor, response checkpoints                                               | Alt+D                                             |
+| `/stop`                                              | Cancel selected active work; run queued input FIFO, or pause if none is queued                | Esc twice within 700 ms in the plain primary root |
+| `/quit`                                              | Request exit; finish pending saves/notices, then shut down                                    | Ctrl+C twice within 3 seconds                     |
+| `/clear-draft`                                       | Clear the unsent draft                                                                        | Ctrl+U                                            |
+| `/draft save`                                        | Save primary text under a generated draft ID, from the secondary field                        | None                                              |
+| `/draft delete <id-prefix>`                          | Delete a saved draft after ID/revision validation                                             | Delete in drafts                                  |
+| `/drafts`                                            | List saved drafts; Enter loads a copy                                                         | None                                              |
+| `/send <draft-id>`                                   | Atomically submit and consume a saved draft, resuming if paused                               | None                                              |
+| `/bindings`                                          | Visual command-shortcut editor                                                                | None                                              |
+| `/bind <key> /command [ ; /command ...] [--default]` | Bind a chord to a validated command chain                                                     | None                                              |
+| `/unbind <key> [--default]`                          | Remove a command shortcut                                                                     | None                                              |
 
 The public catalog has no `/queue`, `/pause`, `/toggle-pause`, `/interrupt`, `/mode`,
 `/force`, `/edit`, `/cancel` or `/cancel-edit`, and no separate run/resume command.
@@ -307,21 +307,21 @@ keeps the caret visible and preserves the desired column during vertical movemen
 The configured message-byte limit also bounds the draft; paste is sanitized and
 does not split a grapheme to fit the limit.
 
-| Keys | Action Outside The Pager |
-| --- | --- |
-| Left / Right | Move one grapheme; Right can accept a tail autosuggestion |
-| Ctrl+F | Move right or accept a tail autosuggestion |
-| Ctrl/Alt+Left, Alt+B | Move one Unicode word left |
-| Ctrl/Alt+Right, Alt+F | Move one Unicode word right or accept one suggested word |
-| Shift+Left / Shift+Right | Move one Unicode word without ghost acceptance, also with Ctrl/Alt |
-| Home / End, Ctrl+A / Ctrl+E | Start/end of the logical line; End/Ctrl+E can accept a tail suggestion |
-| Ctrl+Home / Ctrl+End | Start/end of the entire editor |
-| Up / Down | Move through visual rows; at the top Up prefers pending edit over recall, at the bottom Down cancels a pending edit |
-| Backspace / Delete | Delete one grapheme before/after the caret |
-| Ctrl/Alt+Backspace, Ctrl+W | Delete the preceding word |
-| Ctrl/Alt+Delete | Delete the following word |
-| Ctrl+K / Alt+U | Delete to logical line end/start |
-| Ctrl+U | Clear the draft by default, not just the current line |
+| Keys                        | Action Outside The Pager                                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Left / Right                | Move one grapheme; Right can accept a tail autosuggestion                                                           |
+| Ctrl+F                      | Move right or accept a tail autosuggestion                                                                          |
+| Ctrl/Alt+Left, Alt+B        | Move one Unicode word left                                                                                          |
+| Ctrl/Alt+Right, Alt+F       | Move one Unicode word right or accept one suggested word                                                            |
+| Shift+Left / Shift+Right    | Move one Unicode word without ghost acceptance, also with Ctrl/Alt                                                  |
+| Home / End, Ctrl+A / Ctrl+E | Start/end of the logical line; End/Ctrl+E can accept a tail suggestion                                              |
+| Ctrl+Home / Ctrl+End        | Start/end of the entire editor                                                                                      |
+| Up / Down                   | Move through visual rows; at the top Up prefers pending edit over recall, at the bottom Down cancels a pending edit |
+| Backspace / Delete          | Delete one grapheme before/after the caret                                                                          |
+| Ctrl/Alt+Backspace, Ctrl+W  | Delete the preceding word                                                                                           |
+| Ctrl/Alt+Delete             | Delete the following word                                                                                           |
+| Ctrl+K / Alt+U              | Delete to logical line end/start                                                                                    |
+| Ctrl+U                      | Clear the draft by default, not just the current line                                                               |
 
 Configured action shortcuts take precedence over editor chords. There are no
 default function keys and no external editor invocation at this stage.
@@ -563,12 +563,12 @@ The key/value command and its reversible completion flow remain available:
 flag. Completing a token does not change a preference. A complete validated
 key/value command applies only when executed.
 
-| Command Key | Values | Built-In Default | TOML Field In `[interface]` |
-| --- | --- | --- | --- |
-| `status-line` | `true`, `false` | `true` | `status_line` |
-| `prompt-history` | `true`, `false` | `true` | `prompt_history` |
-| `status` | `text`, `braille`, `minimal`, `bars` | `bars` | `status_preset` |
-| `status-color` | `true`, `false` | `true` | `status_color` |
+| Command Key      | Values                               | Built-In Default | TOML Field In `[interface]` |
+| ---------------- | ------------------------------------ | ---------------- | --------------------------- |
+| `status-line`    | `true`, `false`                      | `true`           | `status_line`               |
+| `prompt-history` | `true`, `false`                      | `true`           | `prompt_history`            |
+| `status`         | `text`, `braille`, `minimal`, `bars` | `bars`           | `status_preset`             |
+| `status-color`   | `true`, `false`                      | `true`           | `status_color`              |
 
 Panel changes and commands without the flag apply only to **this running client
 until exit**. These are client UI values, not backend telemetry controls.
@@ -811,6 +811,11 @@ Process-kill tests do not prove protection against physical media failure.
 
 ## Verify
 
+The application gate below remains separate from repository policy/style checks.
+See [CONTRIBUTING.md](CONTRIBUTING.md#verification) for the pinned development
+tools, commit/PR checks and changelog rules. Node and those tools are not needed
+to run AM. Hooks are intentionally absent.
+
 ```sh
 cargo fmt --all --check
 cargo clippy --locked --all-targets -- -D warnings
@@ -819,25 +824,28 @@ cargo build --locked
 python3 tests/terminal_smoke.py
 ```
 
-The commands above passed locally on Linux on 2026-10-16: formatting,
-warnings-denied Clippy, 465 Rust tests (345 library, 1 CLI, 119 integration),
-a debug build and the standard-library PTY smoke. New regressions cover cached
-running-action completion/cancellation, output growth after EOF, page-one catch-up,
-and artifact reads preserving permissions/content and durable state. See
+The commands above passed locally on Linux and in
+[Linux/macOS CI on 2026-10-17](https://github.com/keepinfov/am/actions/runs/39031843697):
+formatting, warnings-denied Clippy, 466 Rust tests (345 library, 1 CLI, 120
+integration), a debug build and the standard-library PTY smoke. Regressions cover
+cached action completion/cancellation, output growth after EOF, page-one catch-up,
+read-only artifact access and command snapshot publication before ACK without
+duplicate idle/read updates. The live run also confirms the pinned policy/style
+gates; see
 [PLAN section 13](PLAN.md#13-current-contract-and-agent-handoff) for the handoff.
 The earlier separate actual-DSR pyte run reported 120 passed checks, including final publication ordering,
 accepted-card handoff, idle status alignment and settings feedback/margins.
 That run was not repeated in this iteration. These are offline-fixture checks,
 not real-provider or manual GUI acceptance.
 
-| Verification Area | Evidence And Limits |
-| --- | --- |
-| Runtime/storage Rust tests | Passed: checked stop/replay/stale selection, transactional rollback, FIFO autorun and edit barriers; ordinary accumulated input, draft send and `FinishPendingEdit` wait for full generation/action completion. Also queue conflicts, frozen configs, cancellation, quotas, locks, shutdown and crash recovery. |
-| Client Rust tests | Passed: stop catalog/flag rejection, double Esc timing/context, input preservation on rejection, queue-first Up with exact shadow/caret saving, ACK-only restore, edit deletion, paused-send resume, completion/settings/help/journal, four status presets and time-driven white bars. Geometry and ordering tests cover content-sized rows, post-publication resizing, completed native backlog, fullscreen receipt synchronization and authoritative accepted-card identities. |
-| Unix PTY smoke | Passed: After delivery through full generation/actions, checked stop FIFO autorun/no-queue pause, bars, lease-preview hiding, edit cancel/delete/resume, shadow recovery, settings feedback and settings/history/exit. Emitted-sequence and SQLite/preferences/artifact checks use only Python's standard library. |
-| Linux pyte + live PTY | Passed 120 checks with no failures using actual emulated DSR replies, above and at the bottom edge, plus settings screens: exact shell/native scrollback preservation, no duplicated user cards or response chunks, no empty active reserve or idle bars prefix, Unicode caret, accepted-card/native publication handoff, retiring-tail visibility, inline gaps, persistent settings feedback, rejected/ACK-only default saves and restored terminal modes. Final report and settings screens are under `/tmp/opencode/am-layout-publication-evidence-spctcvy2`; pyte is not a project dependency. |
-| Linux/macOS CI | Workflow provided; remote results are not verified here. Earlier local results were on Linux, not a current cross-platform pass report. |
-| Manual GUI/platform/performance | No manual GUI-terminal, macOS or real-provider acceptance is claimed. Pyte is a virtual terminal model, not a GUI emulator. Long-history latency and RSS are unmeasured here. |
+| Verification Area               | Evidence And Limits                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime/storage Rust tests      | Passed: checked stop/replay/stale selection, transactional rollback, FIFO autorun and edit barriers; ordinary accumulated input, draft send and `FinishPendingEdit` wait for full generation/action completion. Also queue conflicts, frozen configs, cancellation, quotas, locks, shutdown and crash recovery.                                                                                                                                                                                                                                                                                    |
+| Client Rust tests               | Passed: stop catalog/flag rejection, double Esc timing/context, input preservation on rejection, queue-first Up with exact shadow/caret saving, ACK-only restore, edit deletion, paused-send resume, completion/settings/help/journal, four status presets and time-driven white bars. Geometry and ordering tests cover content-sized rows, post-publication resizing, completed native backlog, fullscreen receipt synchronization and authoritative accepted-card identities.                                                                                                                   |
+| Unix PTY smoke                  | Passed: After delivery through full generation/actions, checked stop FIFO autorun/no-queue pause, bars, lease-preview hiding, edit cancel/delete/resume, shadow recovery, settings feedback and settings/history/exit. Emitted-sequence and SQLite/preferences/artifact checks use only Python's standard library.                                                                                                                                                                                                                                                                                 |
+| Linux pyte + live PTY           | Passed 120 checks with no failures using actual emulated DSR replies, above and at the bottom edge, plus settings screens: exact shell/native scrollback preservation, no duplicated user cards or response chunks, no empty active reserve or idle bars prefix, Unicode caret, accepted-card/native publication handoff, retiring-tail visibility, inline gaps, persistent settings feedback, rejected/ACK-only default saves and restored terminal modes. Final report and settings screens are under `/tmp/opencode/am-layout-publication-evidence-spctcvy2`; pyte is not a project dependency. |
+| Linux/macOS CI                  | Passed in [run 39031843697](https://github.com/keepinfov/am/actions/runs/39031843697) at `1ff51c8`: strict Clippy, 466 tests with none failed/ignored, build and PTY smoke independently on each OS. This is offline-fixture acceptance, not real-provider or GUI evidence.                                                                                                                                                                                                                                                                                                                        |
+| Manual GUI/platform/performance | No manual GUI-terminal, macOS or real-provider acceptance is claimed. Pyte is a virtual terminal model, not a GUI emulator. Long-history latency and RSS are unmeasured here.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 The repository PTY smoke script checks emitted sequences and persisted state with
 fixed `1,1` cursor-query replies; it does not reconstruct screen geometry. The
@@ -853,6 +861,22 @@ native content still moves the content-attached block naturally. These measureme
 do not prove GUI animation quality or universal terminal reflow behavior.
 No real API, tools, shell, project-write diffs or
 coding-agent work is verified.
+
+## Repository Workflow
+
+Changes use signed commits on `type/short-kebab` branches and PRs into `master`,
+merged as merge commits. [AGENTS.md](AGENTS.md#git-authority) records the scoped
+agent authority; merges/releases and remote creation need explicit permission.
+The public upstream is [keepinfov/am](https://github.com/keepinfov/am). Its `master`
+ruleset requires PRs, verified signatures and the GitHub Actions `required` check,
+and blocks deletion/non-fast-forward updates without bypass actors. The policy
+proposal is [draft PR #1](https://github.com/keepinfov/am/pull/1); it is not merged.
+
+The fast CI gate checks commit/PR structure, declared change impact, changelog
+fragments, file validity and its own tests. Separate pinned style/rustfmt checks
+precede the existing Linux/macOS application matrix. Advisory size reports include
+raw/grouped churn and source-file percentages; L/XL PRs need an explanation, not
+an automatic size veto. Details and local commands are in CONTRIBUTING.
 
 ## Future Connections
 

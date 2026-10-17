@@ -1089,7 +1089,6 @@ fn actor(
         return Ok(());
     }
     loop {
-        let mut changed = false;
         for _ in 0..16 {
             let request = match commands.try_recv() {
                 Ok(request) => request,
@@ -1116,15 +1115,15 @@ fn actor(
                     | Command::ReadArtifactBefore { .. }
             );
             let result = engine.command(&request.id, &request.command);
+            let mut publish = mutation;
             if let Err(error) = &result
                 && (error.downcast_ref::<rusqlite::Error>().is_some()
                     || error.downcast_ref::<std::io::Error>().is_some())
             {
                 engine.fault(error);
-                changed = true;
+                publish = true;
             }
-            if mutation || changed {
-                changed = true;
+            if publish {
                 snapshots.send_replace(engine.snapshot.clone());
             }
             let _ = request.reply.send(result);
@@ -1132,16 +1131,18 @@ fn actor(
                 return Ok(());
             }
         }
-        match engine
+        // Command changes were already published before their ACKs. Only new
+        // producer/dequeue progress or a fault belongs to this publication.
+        let changed = match engine
             .poll_provider()
             .and_then(|progress| engine.start_next().map(|started| progress || started))
         {
-            Ok(progress) => changed |= progress,
+            Ok(progress) => progress,
             Err(error) => {
                 engine.fault(&error);
-                changed = true;
+                true
             }
-        }
+        };
         if changed {
             snapshots.send_replace(engine.snapshot.clone());
         }

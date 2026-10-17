@@ -76,14 +76,14 @@ Sources: [codex_api.py](https://github.com/yuzhenmao/DeLM/blob/18ed1c0d188a38b4a
 
 The following are recommendations and risks inferred from the confirmed implementation, not promises made by DeLM.
 
-| AM Area | Assessment | Recommended Use |
-| --- | --- | --- |
-| Current single-agent foundation | Little immediate benefit; DeLM adds a different execution stack and task lifecycle | Do not integrate or add a Python/Docker sidecar now |
-| Command UI / autocomplete | Not the problem this project solves | Keep input completion and UI command design separate |
-| OpenAI-compatible endpoints / proxies | Poor direct fit; native CLI/provider/audit coupling | Implement AM's planned provider transport independently |
-| Future delegation / context | Relevant ideas, but peer complete-solution workers differ from AM's root/child ownership | Borrow selective publication, evidence, and incremental-view concepts only when needed |
-| Shared files / materials | Explicit publication IDs, bounded bundles, provenance, and conflict refusal are useful references | Design within AM's trusted runtime authorization and artifact model |
-| Durable state / recovery | SQLite/logging is familiar, but contracts differ | Preserve AM's existing ACK, cancellation, bounded-buffer, and no-auto-replay guarantees |
+| AM Area                               | Assessment                                                                                        | Recommended Use                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Current single-agent foundation       | Little immediate benefit; DeLM adds a different execution stack and task lifecycle                | Do not integrate or add a Python/Docker sidecar now                                     |
+| Command UI / autocomplete             | Not the problem this project solves                                                               | Keep input completion and UI command design separate                                    |
+| OpenAI-compatible endpoints / proxies | Poor direct fit; native CLI/provider/audit coupling                                               | Implement AM's planned provider transport independently                                 |
+| Future delegation / context           | Relevant ideas, but peer complete-solution workers differ from AM's root/child ownership          | Borrow selective publication, evidence, and incremental-view concepts only when needed  |
+| Shared files / materials              | Explicit publication IDs, bounded bundles, provenance, and conflict refusal are useful references | Design within AM's trusted runtime authorization and artifact model                     |
+| Durable state / recovery              | SQLite/logging is familiar, but contracts differ                                                  | Preserve AM's existing ACK, cancellation, bounded-buffer, and no-auto-replay guarantees |
 
 ### Pitfalls to Avoid
 
