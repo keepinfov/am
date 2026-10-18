@@ -1012,3 +1012,30 @@ mock tests cannot prove the new permission works. If 403 persists, keep the fail
 visible and investigate without a PAT or weakened trust boundary. PR #2 review,
 manual GUI/performance acceptance, deprecated Actions pins and Stage 2 remain
 separate work; no merge, release or version change is authorized by this correction.
+
+### Size Label Integration Evidence
+
+On 2026-10-18 the operator separately authorized merging PR #3. After its ready-
+for-review [CI run `39156936110`](https://github.com/keepinfov/am/actions/runs/39156936110)
+passed, it was merged as `dc3077afe26d616d2ca4ee8b9477abf789fc86ba`. GitHub reports
+the two-parent merge signature as verified/valid; its subject is the PR title
+with `(#3)` and its body is empty. No admin bypass or auto-merge was used.
+
+The exact merged commit's [push run `39157318444`](https://github.com/keepinfov/am/actions/runs/39157318444)
+passed policy, style, rustfmt, both application jobs and `required`. Complete logs
+from [Linux `117763197426`](https://github.com/keepinfov/am/actions/runs/39157318444/job/117763197426)
+and [macOS `117763197456`](https://github.com/keepinfov/am/actions/runs/39157318444/job/117763197456)
+independently confirm strict Clippy, 466 Rust tests per OS (zero failed/ignored),
+locked build and final PTY smoke success. Earlier PTY failures remain historical
+failures; this CI permission change did not fix the navigation defect in PR #2.
+
+Local re-verification of the merged tree passed fmt, strict Clippy, 466 Rust
+tests, build, 123 policy tests and 15 tooling tests. A combined shell command hit
+its outer 120-second tool timeout during PTY; running the unchanged smoke command
+alone passed. No application deadline, sleep, skip or assertion was changed.
+
+This documentation-only follow-up starts from integrated `master` and supplies
+a fresh PR event to exercise the trusted label workflow. Its actual live results
+must be recorded after that event, not inferred from the ordinary CI pass above.
+PR #2 remains draft at `7befc3d`, unmerged and unchanged. This merge authorization
+does not extend to the documentation follow-up, PR #2, releases or version changes.
