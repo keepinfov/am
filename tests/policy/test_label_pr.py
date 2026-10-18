@@ -434,7 +434,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("types: [opened, synchronize, reopened]", workflow)
         self.assertIn("contents: read", workflow)
         self.assertIn("issues: write", workflow)
-        self.assertIn("pull-requests: read", workflow)
+        self.assertIn("pull-requests: write", workflow)
         self.assertIn("cancel-in-progress: true", workflow)
         self.assertIn(
             "group: pr-size-labels-${{ github.event.pull_request.number }}", workflow
@@ -453,6 +453,11 @@ class WorkflowTests(unittest.TestCase):
         for action in re.findall(r"uses: (\S+)", workflow):
             self.assertRegex(action, r"^[\w/-]+@[0-9a-f]{40}$")
         for forbidden in (
+            "pull-requests: read",
+            "contents: write",
+            "actions: write",
+            "write-all",
+            "read-all",
             "secrets.",
             "head.sha",
             "head.ref",

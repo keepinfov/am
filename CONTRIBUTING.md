@@ -219,10 +219,15 @@ Superseded PR runs are cancelled; `master` runs are not cancelled automatically.
 
 The separate privileged size-label workflow checks out only a trusted default-
 branch base revision, never PR-head code or PR artifacts. It uses API metadata
-and narrow label-write permissions, preserves unrelated labels and rejects stale
-or truncated file metadata. GitHub does not offer atomic head-conditional label
-writes, so a small check/write race is possible; the next event reconciles it.
-The first policy PR cannot run the labeler until trusted base code exists.
+with `contents: read`, `issues: write` for repository label definitions and
+`pull-requests: write` for PR label mutations. It preserves unrelated labels and
+rejects stale or truncated file metadata. GitHub does not offer atomic head-
+conditional label writes, so a small check/write race is possible; the next event
+reconciles it. The privileged workflow comes from the trusted default branch;
+changes to its permissions cannot live-test themselves in their own PR. Verify
+them after separately authorized integration and a fresh `opened`, `synchronize`
+or `reopened` event, not by rerunning an old execution. Local fixtures establish
+the configured boundary, not GitHub's server-side authorization.
 
 The agreed upstream `master` ruleset is active with these settings:
 
@@ -239,9 +244,12 @@ The ruleset is `Protect master` (ID `25301183`) with no bypass actors. Its
 `required` status is bound to the GitHub Actions integration. Recheck live settings
 when changing policy; tracked prose alone is not server enforcement.
 
-The initial policy was merged by explicit authorization in
+The initial policy was integrated by explicitly authorized
 [PR #1](https://github.com/keepinfov/am/pull/1). Its size label was applied manually
-because the trusted base did not yet contain the label workflow. That workflow is
-now available on `master`; verify its actual runs on subsequent PRs rather than
-assuming local tests prove live labeling. Actual CI evidence and remaining gaps
-are recorded in PLAN section 13.
+because the trusted base did not yet contain the label workflow. The first live
+label run on PR #2 failed with HTTP 403 despite effective `issues: write` and
+`pull-requests: read`. Adding PR-write authority is a targeted correction, not a
+proven diagnosis or live-validated fix. Report label failures separately from
+`required`; do not substitute a PAT, run PR-controlled code with the privileged
+token or manually apply labels to conceal failed automation. Actual CI evidence
+and remaining gaps are recorded in PLAN section 13.

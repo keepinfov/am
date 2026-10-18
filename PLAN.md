@@ -989,3 +989,121 @@ the applicable authorization and acceptance evidence.
 Next task after this fix is reviewed/integrated and the current CI is green is
 the explicit local Chat Completions slice above. Manual GUI/performance/provider
 acceptance and deprecated Actions-pin updates remain separate follow-ups.
+
+### Size Label Permission Correction
+
+Current handoff, 2026-10-18: PR #1 was explicitly authorized and merged as
+`b4c57c2`; its earlier draft/unmerged descriptions are historical. The independent
+preview-navigation fix remains in draft PR #2 at `7befc3d`, not in this CI branch.
+Its [verification comment](https://github.com/keepinfov/am/pull/2#issuecomment-6235240719)
+records successful application/`required` CI and a separate failed size-label run.
+This does not reclassify the failed post-merge `master` run as successful.
+
+- [Run `39041421600`, job `117421532288`](https://github.com/keepinfov/am/actions/runs/39041421600/job/117421532288)
+  ran trusted base `b4c57c2`, not PR-head code, and failed with
+  `GitHub API POST failed (HTTP 403)`. Effective token permissions were contents
+  read, issues write and pull-requests read. All five size-label definitions exist;
+  no manual label was applied to conceal the failure. Not every workflow check
+  is green.
+- The sanitized error does not establish the exact authorization response or
+  prove missing PR-write as the cause. The endpoint documentation lists issues-
+  write or pull-requests-write; adding the PR-specific write permission remains
+  a targeted correction that requires live verification.
+- Branch `ci/size-label-permissions` starts at current `master` `b4c57c2`, separate
+  from PR #2. Only `pull-requests: read` becomes `write`. Contents remains read;
+  issues write remains for missing repository label definitions. No PAT, broader
+  repository defaults, ruleset bypass, PR-head checkout or script changes are used.
+- The workflow regression now requires PR-write, rejects PR-read and broad
+  contents/actions/all-permissions grants, and retains the trusted-base, pinned-
+  action and metadata-only checks. It failed before the YAML correction and is
+  a configuration regression, not proof of GitHub authorization. Existing 403,
+  stale-head, unrelated-label and secret-safe error cases remain unchanged.
+- Response-header diagnostics were excluded to preserve the existing no-body,
+  no-header, no-URL and no-credential logging boundary. They are not necessary to
+  make this permission change; persistent failures need a separately justified
+  diagnostic investigation rather than unbounded permission expansion.
+
+Fresh local verification on Linux, 2026-10-18, in the separate worktree
+`/tmp/opencode/am-size-label-permissions`:
+
+- `python3 scripts/repo_policy.py files`: passed.
+- `python3 -m unittest discover -s tests/policy -v`: 123 passed.
+- `python3 -m unittest discover -s tools -v`: 15 passed after installing
+  worktree-local locked dependencies.
+- `python3 scripts/check_style.py`: Prettier, Markdownlint, Ruff, Taplo and
+  actionlint passed.
+- `npm ci --ignore-scripts`: passed; lockfile unchanged.
+- `npm audit --audit-level=low`: 0 vulnerabilities.
+- `cargo fmt --all --check`: passed.
+- `cargo clippy --locked --all-targets -- -D warnings`: passed.
+- `cargo test --locked`: 466 passed: 345 library, 1 CLI, 120 integration;
+  none ignored.
+- `cargo build --locked`: passed.
+- `python3 tests/terminal_smoke.py`: passed; offline PTY fixture, not GUI or
+  provider acceptance.
+- `git diff --check`: passed.
+
+Tools used Node `24.18.0` from the existing Nix store, Python `3.14.6`, the
+checksum-pinned actionlint in `/tmp/opencode/am-style-bin` and pinned Ruff in
+`/tmp/opencode/am-style-venv/bin`, selected with `NODE`, `ACTIONLINT` and `RUFF`.
+The first tooling run failed because this new worktree lacked local npm packages;
+`npm ci --ignore-scripts` resolved it without modifying or weakening the test.
+The 466 Rust tests are this `master`-based tree, not PR #2's 470-test fix tree.
+
+At initial local verification, the commit checker was run with
+`python3 scripts/repo_policy.py commits --base b4c57c2abe07677660eb4499087045d24f72bf58 --head HEAD`.
+That range was empty, so it was not signature verification of the correction.
+Commit, push and PR creation had not occurred at that checkpoint. Later publication
+must check the actual signed commit range and GitHub signature verification; use
+the correction PR's checks and verification comment for exact-head remote evidence.
+Local configuration tests and ordinary PR CI do not prove that the added permission
+fixes the live API failure. No live run using the changed permissions is claimed.
+
+Next task: review this internal CI-only correction. After separately authorized
+integration into `master`, observe a fresh eligible PR event using that trusted
+base and verify the actual token permissions, successful `label` check and the
+computed size label while preserving unrelated labels. An old-run retry or green
+mock tests cannot prove the new permission works. If 403 persists, keep the failure
+visible and investigate without a PAT or weakened trust boundary. PR #2 review,
+manual GUI/performance acceptance, deprecated Actions pins and Stage 2 remain
+separate work; no merge, release or version change is authorized by this correction.
+
+### Preview Fix Integration
+
+On 2026-10-18 the operator authorized preparing, verifying and merging PR #2,
+not PR #4. Earlier statements that PR #2 remained draft/unmerged describe their
+historical checkpoints. The published fix is updated by merging integrated
+`master` `dc3077a`, never rebasing or rewriting `7befc3d`.
+
+Integration conflicts are limited to CONTRIBUTING and PLAN: retain master's
+current CI/permission contract and both chronological handoff records. Production
+code, regression tests, the stricter PTY oracle and changelog remain identical
+to the reviewed fix. The separate label correction from merged PR #3 is inherited,
+not independently reimplemented in this PR. Its live application/reconciliation
+evidence is in [PR #4's verification comment](https://github.com/keepinfov/am/pull/4#issuecomment-6254137834);
+PR #4's red macOS PTY gate is not hidden or reclassified as successful.
+
+Fresh Linux verification on 2026-10-18 in the separate integration worktree passed:
+
+- `cargo fmt --all --check` and strict locked all-target Clippy.
+- `cargo test --locked`: 470 passed (349 library, 1 CLI, 120 integration),
+  none failed or ignored.
+- `cargo test --locked client::history_integration_tests`: 22 passed.
+- `cargo build --locked` and `python3 tests/terminal_smoke.py`: passed with the
+  strict fresh-frame artifact-preview oracle and unchanged application deadlines.
+- `python3 -m unittest discover -s tests/policy -v`: 123 passed.
+- `python3 -m unittest discover -s tools -v`: 15 passed.
+- `python3 scripts/repo_policy.py files` and pinned `check_style.py`: passed.
+- `npm ci --ignore-scripts` and `npm audit --audit-level=low`: passed,
+  0 vulnerabilities, no lockfile changes.
+
+Read-only review found no code defects in the original fix; integration changes
+no application/test content relative to `7befc3d`. The actual signed range and
+published PR metadata must pass policy, with GitHub verification of each added
+commit. Exact-head Linux/macOS and label checks belong in PR #2's verification
+comment; older green heads are not acceptance of conflict resolution. Preserve
+required CI and merge-commit policy without admin bypass, skipped checks or manual
+labels. After the authorized merge, inspect its own push CI and report any failure.
+Stage 2, GUI/performance/provider acceptance, releases and version changes remain
+outside this navigation correction; the next implementation slice remains the
+explicit local Chat Completions increment after this fix's integrated acceptance.
