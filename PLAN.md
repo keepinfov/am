@@ -1035,7 +1035,32 @@ its outer 120-second tool timeout during PTY; running the unchanged smoke comman
 alone passed. No application deadline, sleep, skip or assertion was changed.
 
 This documentation-only follow-up starts from integrated `master` and supplies
-a fresh PR event to exercise the trusted label workflow. Its actual live results
-must be recorded after that event, not inferred from the ordinary CI pass above.
+a fresh PR event to exercise the trusted label workflow. Actual live evidence
+below is separate from the ordinary CI pass above.
 PR #2 remains draft at `7befc3d`, unmerged and unchanged. This merge authorization
 does not extend to the documentation follow-up, PR #2, releases or version changes.
+
+The fresh opened event for [draft PR #4](https://github.com/keepinfov/am/pull/4)
+at head `9bdd68e5393fc330f93486cb173679465f8d3dd7` produced successful
+[label run `39157977492`, job `117765065711`](https://github.com/keepinfov/am/actions/runs/39157977492/job/117765065711).
+Complete logs confirm effective contents read, issues write and pull-requests
+write, actual trusted-base checkout `dc3077a`, isolated Python and the final
+`size/XS: 27 reviewable API additions + deletions; binaries unknown` marker.
+PR metadata independently reports the 27-line PLAN addition and `size/XS`.
+Issue event `33587834564` at `2026-10-18T19:16:12Z` attributes the label to
+`github-actions[bot]`, not a manual actor. No old run was retried and no PAT,
+repository-default expansion, ruleset bypass or PR-head code execution was used.
+
+This verifies application of an existing label on a same-repository draft PR,
+not fork behavior, missing-definition creation or universal GitHub authorization.
+No unrelated label was present on this live PR; preservation of unrelated labels
+remains covered by the existing policy fixtures, not newly demonstrated live.
+The earlier sanitized 403s retain their limited diagnostic value; the new run
+directly establishes successful behavior with the integrated permission set.
+
+Final documentation verification uses the pinned style/actionlint and file checks,
+commit-range and actual PR-metadata policy checks. Application code is unchanged
+from the locally and remotely verified merged tree above. Exact-head CI and any
+later synchronize-event labeling evidence belong in PR #4's verification comment.
+Next work is review of this evidence-only PR and the independent navigation fix;
+manual GUI/performance/provider acceptance and deprecated Actions pins remain open.
