@@ -1068,6 +1068,60 @@ visible and investigate without a PAT or weakened trust boundary. PR #2 review,
 manual GUI/performance acceptance, deprecated Actions pins and Stage 2 remain
 separate work; no merge, release or version change is authorized by this correction.
 
+### Size Label Integration Evidence
+
+On 2026-10-18 the operator separately authorized merging PR #3. After its ready-
+for-review [CI run `39156936110`](https://github.com/keepinfov/am/actions/runs/39156936110)
+passed, it was merged as `dc3077afe26d616d2ca4ee8b9477abf789fc86ba`. GitHub reports
+the two-parent merge signature as verified/valid; its subject is the PR title
+with `(#3)` and its body is empty. No admin bypass or auto-merge was used.
+
+The exact merged commit's [push run `39157318444`](https://github.com/keepinfov/am/actions/runs/39157318444)
+passed policy, style, rustfmt, both application jobs and `required`. Complete logs
+from [Linux `117763197426`](https://github.com/keepinfov/am/actions/runs/39157318444/job/117763197426)
+and [macOS `117763197456`](https://github.com/keepinfov/am/actions/runs/39157318444/job/117763197456)
+independently confirm strict Clippy, 466 Rust tests per OS (zero failed/ignored),
+locked build and final PTY smoke success. Earlier PTY failures remain historical
+failures; this CI permission change did not fix the navigation defect in PR #2.
+
+Local re-verification of the merged tree passed fmt, strict Clippy, 466 Rust
+tests, build, 123 policy tests and 15 tooling tests. A combined shell command hit
+its outer 120-second tool timeout during PTY; running the unchanged smoke command
+alone passed. No application deadline, sleep, skip or assertion was changed.
+
+This documentation-only follow-up starts from integrated `master` and supplies
+a fresh PR event to exercise the trusted label workflow. Actual live evidence
+below is separate from the ordinary CI pass above.
+At that checkpoint PR #2 remained draft at `7befc3d`, unmerged and unchanged.
+PR #3's merge authorization did not extend to this documentation follow-up,
+PR #2, releases or version changes; later authorizations are recorded below.
+
+The fresh opened event for [draft PR #4](https://github.com/keepinfov/am/pull/4)
+at head `9bdd68e5393fc330f93486cb173679465f8d3dd7` produced successful
+[label run `39157977492`, job `117765065711`](https://github.com/keepinfov/am/actions/runs/39157977492/job/117765065711).
+Complete logs confirm effective contents read, issues write and pull-requests
+write, actual trusted-base checkout `dc3077a`, isolated Python and the final
+`size/XS: 27 reviewable API additions + deletions; binaries unknown` marker.
+PR metadata independently reports the 27-line PLAN addition and `size/XS`.
+Issue event `33587834564` at `2026-10-18T19:16:12Z` attributes the label to
+`github-actions[bot]`, not a manual actor. No old run was retried and no PAT,
+repository-default expansion, ruleset bypass or PR-head code execution was used.
+
+This verifies application of an existing label on a same-repository draft PR,
+not fork behavior, missing-definition creation or universal GitHub authorization.
+No unrelated label was present on this live PR; preservation of unrelated labels
+remains covered by the existing policy fixtures, not newly demonstrated live.
+The earlier sanitized 403s retain their limited diagnostic value; the new run
+directly establishes successful behavior with the integrated permission set.
+
+Final documentation verification uses the pinned style/actionlint and file checks,
+commit-range and actual PR-metadata policy checks. Application code is unchanged
+from the locally and remotely verified merged tree above. Exact-head CI and any
+later synchronize-event labeling evidence belong in PR #4's verification comment.
+At that checkpoint the next work was review of this evidence-only PR and the
+independent navigation fix. Manual GUI/performance/provider acceptance and
+deprecated Actions pins remained open.
+
 ### Preview Fix Integration
 
 On 2026-10-18 the operator authorized preparing, verifying and merging PR #2,
@@ -1107,3 +1161,39 @@ labels. After the authorized merge, inspect its own push CI and report any failu
 Stage 2, GUI/performance/provider acceptance, releases and version changes remain
 outside this navigation correction; the next implementation slice remains the
 explicit local Chat Completions increment after this fix's integrated acceptance.
+
+### Evidence Integration Handoff
+
+On 2026-10-18 the operator separately authorized preparing, verifying and merging
+PR #4. Its published branch is updated by merging current `master`, not rebasing.
+Only PLAN append blocks conflict; retain both evidence histories and explicitly
+distinguish their checkpoints from this current handoff. All non-PLAN files match
+integrated master; this remains an internal documentation-only correction.
+
+PR #2 is now merged as `04369349e6aa4a831e7026c152d14b5f9ff99fc1`, not draft.
+Its exact [post-merge push run `39162143321`](https://github.com/keepinfov/am/actions/runs/39162143321)
+passed policy/style/rustfmt, strict Clippy, 470 Rust tests per OS, build, PTY and
+`required` on Linux/macOS. The [verified merge and complete-log evidence](https://github.com/keepinfov/am/pull/2#issuecomment-6254584497)
+are distinct from the earlier 466-test CI trees and old failed PTY executions.
+
+The original PR #4 label evidence above remains valid. Its subsequent successful
+[synchronize run `39158177213`](https://github.com/keepinfov/am/actions/runs/39158177213)
+computed 52 cumulative PR lines, applied `size/S` and removed `size/XS`, all by
+the Actions bot. The old PR #4 application run `39158179853` failed macOS PTY;
+that failure remains historical, not replaced by PR #2's passing evidence.
+
+Fresh local verification of this integrated documentation tree on 2026-10-18
+passed `cargo fmt --all --check`, strict locked all-target Clippy,
+`cargo test --locked` (470 passed: 349 library, 1 CLI, 120 integration; none
+failed/ignored), `cargo build --locked` and `python3 tests/terminal_smoke.py`.
+Policy discovery passed 123 tests; tooling discovery passed 15 tests. Pinned
+`check_style.py` including actionlint, file validation and diff whitespace checks
+passed; `npm audit --audit-level=low` found 0 vulnerabilities. No lockfile, test,
+deadline, skip, code or workflow changed relative to current master.
+
+Require actual exact-head application and label checks before the authorized
+merge, then inspect its own push CI. Record those immutable run links, final
+commit-range policy and GitHub signature verification in PR #4's verification
+comment rather than infer success from another tree. GUI, performance, provider
+acceptance, deprecated Action pins, releases and versions remain separate; the
+next implementation slice is still the bounded local Chat Completions increment.
