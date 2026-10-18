@@ -427,6 +427,11 @@ inferred text parsing. Actions and output are read in bounded pages on the worke
 not by loading a whole action tree or file into the input/render loop. Arbitrary
 action-ID jumps are not supported.
 
+Background transcript refreshes do not lock navigation among cached list rows or
+across the message/action seam. Explicit page loads remain serialized; when one
+supersedes a background refresh, the older projection is discarded without moving
+selection or reporting an unexpected reply.
+
 Cached running actions have an independent bounded metadata refresh, including
 while browsing away from the tail. Completion/cancellation updates the existing
 row without moving selection or consuming page navigation. New output reopens
@@ -870,7 +875,8 @@ agent authority; merges/releases and remote creation need explicit permission.
 The public upstream is [keepinfov/am](https://github.com/keepinfov/am). Its `master`
 ruleset requires PRs, verified signatures and the GitHub Actions `required` check,
 and blocks deletion/non-fast-forward updates without bypass actors. The policy
-proposal is [draft PR #1](https://github.com/keepinfov/am/pull/1); it is not merged.
+was integrated by [PR #1](https://github.com/keepinfov/am/pull/1) as `b4c57c2`.
+Current fix verification and remaining gaps are recorded in PLAN section 13.
 
 The fast CI gate checks commit/PR structure, declared change impact, changelog
 fragments, file validity and its own tests. Separate pinned style/rustfmt checks

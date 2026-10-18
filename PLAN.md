@@ -735,10 +735,10 @@ slice below; missing manual/platform evidence is still tracked, not waived.
 
 ### Next Implementation Slice
 
-The repository policy delivery below is not merged into `master`. Integrate it
-only with explicit merge authorization before treating `master` as carrying these
-rules; alternatively agree a separately named dependent branch. Do not mix Stage 2
-implementation into `ci/repository-policy` or merge the policy branch implicitly.
+Repository policy was integrated into `master` by explicitly authorized PR #1
+at `b4c57c2`. The current Stage 1 preview-navigation fix below takes precedence
+over starting Stage 2; keep that fix isolated on its own branch. Subsequent feature
+work starts from the integrated policy, not the obsolete bootstrap branch.
 
 After the final Stage 1 gate, begin a real Stage 2 vertical slice, not a catalog
 of unused profile structs. Recommended first increment:
@@ -935,6 +935,61 @@ creation or basic protection. No merge, release, tag or version change occurred.
 Manual GUI, real-provider, performance and live label-automation evidence remain
 separate from the offline automated acceptance gate.
 
+### Preview Navigation Fix
+
+Current handoff, 2026-10-17: PR #1 was explicitly authorized and merged as
+`b4c57c2`; references above to its draft/unmerged state are historical. The
+[post-merge run](https://github.com/keepinfov/am/actions/runs/39038115748) passed
+policy/style/rustfmt, all Rust checks on both OSes and the full Linux job, but
+macOS PTY failed at the artifact `Preview` assertion with `Message #2` selected.
+Do not present the earlier green PR runs as acceptance of this post-merge failure.
+
+The operator requested a separate fix PR. Work is on
+`fix/history-preview-navigation`, not directly on `master`:
+
+- A deterministic regression seeds real Store history/artifacts, opens the reader
+  through UI commands, holds a real poll-issued history completion, and sends Down
+  then Enter. Before the fix it failed with `Some(Message(2))` instead of the
+  expected action. The failed exact command was
+  `cargo test --locked client::history_integration_tests::background_history_poll_preserves_down_enter_artifact_navigation -- --exact`.
+- The cause is the shared busy flag: a background read incorrectly blocks cached
+  list movement, while Enter still opens the unchanged message selection. Merely
+  waiting for an action row cannot prevent another periodic poll from starting.
+- Foreground page admission and background refresh occupancy are now separate.
+  At most one of each is outstanding; the existing overall command bound remains.
+  Explicit page loads invalidate older background projections, whose successful
+  replies are silently consumed without clearing the foreground busy flag.
+- Four new regressions cover navigation before/after refresh completion, paging
+  during refresh, defensive completion-order permutations, cached reopen and
+  explicit Home/End behavior, and cached-running refresh invalidation without
+  spurious notices. The application worker remains FIFO; defensive reply-order
+  tests are not a claim that the observed failure required reordered worker replies.
+- The PTY check now requires an artifact `Preview` heading, exact action label/status,
+  expected byte count and content in one fresh repaint. Shared assistant text alone
+  cannot satisfy it. No repeated arrows, deadline increases or sleeps hide the bug.
+- Runtime/storage authority, frozen configurations, queue delivery and publication
+  are unchanged. This is a bounded client/read-navigation fix, not Stage 2.
+
+Targeted history integration verification passed 22 tests, including the original
+red regression after the fix. The complete local gate below passed on Linux on
+2026-10-17. Remote acceptance must be checked on the fix PR's exact head; it is
+not inherited from PR #1. Do not merge this fix or mark Stage 2 started without
+the applicable authorization and acceptance evidence.
+
+| Preview Fix Verification                             | Result                                                                                |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `cargo fmt --all --check`                            | Passed                                                                                |
+| `cargo clippy --locked --all-targets -- -D warnings` | Passed                                                                                |
+| `cargo test --locked`                                | 470 passed: 349 library, 1 CLI, 120 integration; none ignored                         |
+| `cargo build --locked`                               | Passed                                                                                |
+| `python3 tests/terminal_smoke.py`                    | Passed with exact fresh-frame artifact metadata checks                                |
+| Policy/style/tooling gates                           | File validity, pinned style checks, 123 policy tests and 15 tooling tests passed      |
+| Live Linux/macOS CI and automatic size label         | Not yet run at local verification; consult the fix PR checks and verification comment |
+
+Next task after this fix is reviewed/integrated and the current CI is green is
+the explicit local Chat Completions slice above. Manual GUI/performance/provider
+acceptance and deprecated Actions-pin updates remain separate follow-ups.
+
 ### Size Label Permission Correction
 
 Current handoff, 2026-10-18: PR #1 was explicitly authorized and merged as
@@ -1037,8 +1092,9 @@ alone passed. No application deadline, sleep, skip or assertion was changed.
 This documentation-only follow-up starts from integrated `master` and supplies
 a fresh PR event to exercise the trusted label workflow. Actual live evidence
 below is separate from the ordinary CI pass above.
-PR #2 remains draft at `7befc3d`, unmerged and unchanged. This merge authorization
-does not extend to the documentation follow-up, PR #2, releases or version changes.
+At that checkpoint PR #2 remained draft at `7befc3d`, unmerged and unchanged.
+PR #3's merge authorization did not extend to this documentation follow-up,
+PR #2, releases or version changes; later authorizations are recorded below.
 
 The fresh opened event for [draft PR #4](https://github.com/keepinfov/am/pull/4)
 at head `9bdd68e5393fc330f93486cb173679465f8d3dd7` produced successful
@@ -1062,5 +1118,82 @@ Final documentation verification uses the pinned style/actionlint and file check
 commit-range and actual PR-metadata policy checks. Application code is unchanged
 from the locally and remotely verified merged tree above. Exact-head CI and any
 later synchronize-event labeling evidence belong in PR #4's verification comment.
-Next work is review of this evidence-only PR and the independent navigation fix;
-manual GUI/performance/provider acceptance and deprecated Actions pins remain open.
+At that checkpoint the next work was review of this evidence-only PR and the
+independent navigation fix. Manual GUI/performance/provider acceptance and
+deprecated Actions pins remained open.
+
+### Preview Fix Integration
+
+On 2026-10-18 the operator authorized preparing, verifying and merging PR #2,
+not PR #4. Earlier statements that PR #2 remained draft/unmerged describe their
+historical checkpoints. The published fix is updated by merging integrated
+`master` `dc3077a`, never rebasing or rewriting `7befc3d`.
+
+Integration conflicts are limited to CONTRIBUTING and PLAN: retain master's
+current CI/permission contract and both chronological handoff records. Production
+code, regression tests, the stricter PTY oracle and changelog remain identical
+to the reviewed fix. The separate label correction from merged PR #3 is inherited,
+not independently reimplemented in this PR. Its live application/reconciliation
+evidence is in [PR #4's verification comment](https://github.com/keepinfov/am/pull/4#issuecomment-6254137834);
+PR #4's red macOS PTY gate is not hidden or reclassified as successful.
+
+Fresh Linux verification on 2026-10-18 in the separate integration worktree passed:
+
+- `cargo fmt --all --check` and strict locked all-target Clippy.
+- `cargo test --locked`: 470 passed (349 library, 1 CLI, 120 integration),
+  none failed or ignored.
+- `cargo test --locked client::history_integration_tests`: 22 passed.
+- `cargo build --locked` and `python3 tests/terminal_smoke.py`: passed with the
+  strict fresh-frame artifact-preview oracle and unchanged application deadlines.
+- `python3 -m unittest discover -s tests/policy -v`: 123 passed.
+- `python3 -m unittest discover -s tools -v`: 15 passed.
+- `python3 scripts/repo_policy.py files` and pinned `check_style.py`: passed.
+- `npm ci --ignore-scripts` and `npm audit --audit-level=low`: passed,
+  0 vulnerabilities, no lockfile changes.
+
+Read-only review found no code defects in the original fix; integration changes
+no application/test content relative to `7befc3d`. The actual signed range and
+published PR metadata must pass policy, with GitHub verification of each added
+commit. Exact-head Linux/macOS and label checks belong in PR #2's verification
+comment; older green heads are not acceptance of conflict resolution. Preserve
+required CI and merge-commit policy without admin bypass, skipped checks or manual
+labels. After the authorized merge, inspect its own push CI and report any failure.
+Stage 2, GUI/performance/provider acceptance, releases and version changes remain
+outside this navigation correction; the next implementation slice remains the
+explicit local Chat Completions increment after this fix's integrated acceptance.
+
+### Evidence Integration Handoff
+
+On 2026-10-18 the operator separately authorized preparing, verifying and merging
+PR #4. Its published branch is updated by merging current `master`, not rebasing.
+Only PLAN append blocks conflict; retain both evidence histories and explicitly
+distinguish their checkpoints from this current handoff. All non-PLAN files match
+integrated master; this remains an internal documentation-only correction.
+
+PR #2 is now merged as `04369349e6aa4a831e7026c152d14b5f9ff99fc1`, not draft.
+Its exact [post-merge push run `39162143321`](https://github.com/keepinfov/am/actions/runs/39162143321)
+passed policy/style/rustfmt, strict Clippy, 470 Rust tests per OS, build, PTY and
+`required` on Linux/macOS. The [verified merge and complete-log evidence](https://github.com/keepinfov/am/pull/2#issuecomment-6254584497)
+are distinct from the earlier 466-test CI trees and old failed PTY executions.
+
+The original PR #4 label evidence above remains valid. Its subsequent successful
+[synchronize run `39158177213`](https://github.com/keepinfov/am/actions/runs/39158177213)
+computed 52 cumulative PR lines, applied `size/S` and removed `size/XS`, all by
+the Actions bot. The old PR #4 application run `39158179853` failed macOS PTY;
+that failure remains historical, not replaced by PR #2's passing evidence.
+
+Fresh local verification of this integrated documentation tree on 2026-10-18
+passed `cargo fmt --all --check`, strict locked all-target Clippy,
+`cargo test --locked` (470 passed: 349 library, 1 CLI, 120 integration; none
+failed/ignored), `cargo build --locked` and `python3 tests/terminal_smoke.py`.
+Policy discovery passed 123 tests; tooling discovery passed 15 tests. Pinned
+`check_style.py` including actionlint, file validation and diff whitespace checks
+passed; `npm audit --audit-level=low` found 0 vulnerabilities. No lockfile, test,
+deadline, skip, code or workflow changed relative to current master.
+
+Require actual exact-head application and label checks before the authorized
+merge, then inspect its own push CI. Record those immutable run links, final
+commit-range policy and GitHub signature verification in PR #4's verification
+comment rather than infer success from another tree. GUI, performance, provider
+acceptance, deprecated Action pins, releases and versions remain separate; the
+next implementation slice is still the bounded local Chat Completions increment.

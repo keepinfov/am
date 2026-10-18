@@ -238,6 +238,8 @@ pub(super) struct Ui {
     pub(super) history_browser: HistoryBrowser,
     pub(super) history_rows: Vec<Line<'static>>,
     pub(super) history_busy: bool,
+    history_refresh_busy: bool,
+    history_refresh_stale: bool,
     pub(super) info_scroll: u16,
     pub(super) settings_selected: usize,
     pub(super) settings_editor: Option<usize>,
@@ -365,6 +367,8 @@ impl Ui {
             history_browser: HistoryBrowser::default(),
             history_rows: Vec::new(),
             history_busy: false,
+            history_refresh_busy: false,
+            history_refresh_stale: false,
             info_scroll: 0,
             settings_selected: 0,
             settings_editor: None,
@@ -1476,6 +1480,8 @@ impl Ui {
             && self.enqueue(tx, Op::History(load, false), self.history.command(load))
         {
             self.history_busy = true;
+            // An explicit page supersedes an older background projection.
+            self.history_refresh_stale = self.history_refresh_busy;
         }
     }
 
@@ -1564,21 +1570,25 @@ impl Ui {
         if self.view == View::History
             && self.history.follows_tail()
             && !self.history_busy
+            && !self.history_refresh_busy
             && self.enqueue(
                 tx,
                 Op::History(Load::Latest, true),
                 self.history.command(Load::Latest),
             )
         {
-            self.history_busy = true;
+            self.history_refresh_busy = true;
+            self.history_refresh_stale = false;
         }
         if self.view == View::History
             && !self.history.follows_tail()
             && !self.history_busy
+            && !self.history_refresh_busy
             && let Some(command) = self.history.refresh_command()
             && self.enqueue(tx, Op::HistoryRefresh, command)
         {
-            self.history_busy = true;
+            self.history_refresh_busy = true;
+            self.history_refresh_stale = false;
         }
         if !self.events_busy && self.outstanding < OUTSTANDING - 2 {
             let after = self.event_cursor;
@@ -4579,7 +4589,8 @@ impl Ui {
                 self.tail_busy = false;
                 self.native_tail_stale = false;
             }
-            Op::History(_, _) | Op::HistoryRefresh => self.history_busy = false,
+            Op::History(_, false) => self.history_busy = false,
+            Op::History(_, true) | Op::HistoryRefresh => self.history_refresh_busy = false,
             Op::Events => self.events_busy = false,
             _ => {}
         }
@@ -4944,7 +4955,7 @@ impl Ui {
             (Op::History(load, refresh), Reply::History(entries))
                 if !matches!(load, Load::Anchor(_)) =>
             {
-                if !refresh || self.history.follows_tail() {
+                if !refresh || (!self.history_refresh_stale && self.history.follows_tail()) {
                     self.history.apply(entries, load);
                     if !refresh {
                         self.history_browser
@@ -4974,8 +4985,10 @@ impl Ui {
                 self.sync_history_browser();
             }
             (Op::HistoryRefresh, Reply::History(entries)) => {
-                self.history.refresh(entries);
-                self.sync_history_browser();
+                if !self.history_refresh_stale {
+                    self.history.refresh(entries);
+                    self.sync_history_browser();
+                }
             }
             (Op::Inputs, Reply::Inputs(entries)) => {
                 let mut inputs = entries

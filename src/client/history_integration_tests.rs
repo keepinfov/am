@@ -616,6 +616,293 @@ async fn drain_history_reads(
     commands
 }
 
+async fn open_saved_history(
+    count: usize,
+    page: usize,
+) -> (
+    tempfile::TempDir,
+    crate::runtime::Client,
+    Ui,
+    Snapshot,
+    mpsc::Sender<Work>,
+    mpsc::Receiver<Work>,
+) {
+    use crate::storage::{Completion, Store};
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("session.sqlite3");
+    let mut config = Config::default();
+    config.limits.history_page = page;
+    config.provider.first_event_ms = 60_000;
+    let mut store = Store::open(&path, &config).unwrap();
+    for index in 0..count {
+        store
+            .apply(
+                &format!("seed-{index}"),
+                &Command::Send {
+                    text: format!("saved prompt {index}"),
+                },
+                &config,
+                None,
+            )
+            .unwrap();
+        let attempt = store.start_next(&config).unwrap().unwrap();
+        store
+            .finish(Completion {
+                attempt_id: &attempt.attempt_id,
+                text: "saved artifact output",
+                status: "completed",
+            })
+            .unwrap();
+    }
+    drop(store);
+    let client = crate::runtime::Client::start(&path, config.clone())
+        .await
+        .unwrap();
+    let snapshot = client.snapshot();
+    let mut ui = Ui::new(&config, &snapshot);
+    let (tx, mut rx) = mpsc::channel(OUTSTANDING);
+    ui.execute(Action::History, "", false, &snapshot, &tx)
+        .unwrap();
+    drain_history_reads(&mut ui, &mut rx, &client).await;
+    ui.prepare_history(110, 20);
+    (directory, client, ui, snapshot, tx, rx)
+}
+
+#[tokio::test]
+async fn background_history_poll_preserves_down_enter_artifact_navigation() {
+    for finish_before_enter in [false, true] {
+        let (_directory, client, mut ui, snapshot, tx, mut rx) = open_saved_history(1, 8).await;
+        assert_eq!(ui.history_browser.selection(), Some(&Selection::Message(2)));
+        assert_eq!(ui.history_browser.focus, Focus::List);
+        let action = ui.journal.actions[0].clone();
+        let artifact = action.output.unwrap();
+        ui.poll(&tx);
+        let mut background = None;
+        while let Ok(work) = rx.try_recv() {
+            let result = client.command(work.command).await;
+            if matches!(work.op, Op::History(Load::Latest, true)) {
+                background = Some((work.op, result));
+            } else {
+                complete(&mut ui, work.op, result);
+            }
+        }
+        assert!(background.is_some(), "poll must issue a real tail refresh");
+        press(&mut ui, KeyCode::Down, &snapshot, &tx);
+        assert_eq!(
+            ui.history_browser.selection(),
+            Some(&Selection::Action(action.id.clone())),
+            "background polling must not discard cached list navigation"
+        );
+        if finish_before_enter {
+            let (op, result) = background.take().unwrap();
+            complete(&mut ui, op, result);
+        }
+        press(&mut ui, KeyCode::Enter, &snapshot, &tx);
+        if let Some((op, result)) = background.take() {
+            complete(&mut ui, op, result);
+        }
+        let commands = drain_history_reads(&mut ui, &mut rx, &client).await;
+        assert!(commands.iter().any(|command| matches!(
+            command, Command::ReadArtifact { id, offset: 0, .. } if id == &artifact.id
+        )));
+        assert_eq!(
+            ui.history_browser.selection(),
+            Some(&Selection::Action(action.id))
+        );
+        assert_eq!(ui.history_browser.focus, Focus::Preview);
+        assert_eq!(ui.journal.path, artifact.path);
+        assert_eq!(ui.journal.preview_text, "saved artifact output");
+        ui.prepare_history(110, 20);
+        let mut terminal =
+            ratatui::Terminal::new(ratatui::backend::TestBackend::new(110, 20)).unwrap();
+        terminal
+            .draw(|frame| ui.history_browser.render(frame, frame.area(), &ui.journal))
+            .unwrap();
+        let screen: String = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(screen.contains("Preview"));
+        assert!(ui.pending_notices.is_empty());
+        client.shutdown().await.unwrap();
+    }
+}
+
+#[tokio::test]
+async fn foreground_history_page_during_refresh_is_not_stranded_or_reset() {
+    for foreground_first in [false, true] {
+        let (_directory, client, mut ui, snapshot, tx, mut rx) = open_saved_history(8, 2).await;
+        ui.poll(&tx);
+        let mut background = None;
+        while let Ok(work) = rx.try_recv() {
+            let result = client.command(work.command).await;
+            if matches!(work.op, Op::History(Load::Latest, true)) {
+                background = Some((work.op, result));
+            } else {
+                complete(&mut ui, work.op, result);
+            }
+        }
+        let (background, refresh_result) = background.unwrap();
+        press(&mut ui, KeyCode::Up, &snapshot, &tx);
+        assert_eq!(
+            ui.history_browser.selection(),
+            Some(&Selection::Message(15))
+        );
+        press(&mut ui, KeyCode::Up, &snapshot, &tx);
+        let page = rx.try_recv().expect("navigation must admit the older page");
+        assert!(matches!(page.op, Op::History(Load::Older, false)));
+        assert!(matches!(
+            page.command,
+            Command::Transcript {
+                before: Some(15),
+                after: None,
+                limit: 2
+            }
+        ));
+        let page_result = client.command(page.command).await;
+        if foreground_first {
+            complete(&mut ui, page.op, page_result);
+            complete(&mut ui, background, refresh_result);
+        } else {
+            complete(&mut ui, background, refresh_result);
+            assert!(ui.history_busy, "refresh must not unlock a pending page");
+            complete(&mut ui, page.op, page_result);
+        }
+        assert!(!ui.history_busy);
+        assert!(!ui.history.follows_tail());
+        assert_eq!(
+            ui.history_browser.selection(),
+            Some(&Selection::Message(14))
+        );
+        assert_eq!(
+            ui.history
+                .entries()
+                .map(|entry| entry.seq)
+                .collect::<Vec<_>>(),
+            [13, 14, 15, 16]
+        );
+        press(&mut ui, KeyCode::Down, &snapshot, &tx);
+        assert_eq!(
+            ui.history_browser.selection(),
+            Some(&Selection::Message(15))
+        );
+        assert!(rx.try_recv().is_err());
+        assert!(ui.pending_notices.is_empty());
+        client.shutdown().await.unwrap();
+    }
+}
+
+#[tokio::test]
+async fn reopening_history_serializes_initial_page_and_preserves_explicit_edges() {
+    let (_directory, client, mut ui, snapshot, tx, mut rx) = open_saved_history(1, 8).await;
+    press(&mut ui, KeyCode::Esc, &snapshot, &tx);
+    ui.execute(Action::History, "", false, &snapshot, &tx)
+        .unwrap();
+    let page = rx.try_recv().unwrap();
+    assert!(matches!(page.op, Op::History(Load::Latest, false)));
+    let result = client.command(page.command).await;
+    drain_history_reads(&mut ui, &mut rx, &client).await;
+    assert!(ui.history_busy);
+    press(&mut ui, KeyCode::Down, &snapshot, &tx);
+    assert_eq!(ui.history_browser.selection(), Some(&Selection::Message(2)));
+    complete(&mut ui, page.op, result);
+    press(&mut ui, KeyCode::Down, &snapshot, &tx);
+    let action = ui.journal.selected_action().unwrap().id.clone();
+    assert_eq!(
+        ui.history_browser.selection(),
+        Some(&Selection::Action(action))
+    );
+    press(&mut ui, KeyCode::Enter, &snapshot, &tx);
+    drain_history_reads(&mut ui, &mut rx, &client).await;
+    assert_eq!(ui.history_browser.focus, Focus::Preview);
+    assert_eq!(ui.journal.preview_text, "saved artifact output");
+    press(&mut ui, KeyCode::Esc, &snapshot, &tx);
+    for (key, selected) in [(KeyCode::Home, 1), (KeyCode::End, 2)] {
+        press(&mut ui, key, &snapshot, &tx);
+        drain_history_reads(&mut ui, &mut rx, &client).await;
+        assert_eq!(
+            ui.history_browser.selection(),
+            Some(&Selection::Message(selected))
+        );
+    }
+    assert!(ui.pending_notices.is_empty());
+    client.shutdown().await.unwrap();
+}
+
+#[tokio::test]
+async fn superseded_running_history_refresh_is_silent_and_does_not_unlock_a_page() {
+    for foreground_first in [false, true] {
+        let (_directory, client, mut ui, _, tx, mut rx) = open_saved_history(1, 2).await;
+        client
+            .command(Command::Send {
+                text: "waiting attempt".into(),
+            })
+            .await
+            .unwrap();
+        client.command(Command::Resume).await.unwrap();
+        let mut updates = client.subscribe();
+        let snapshot = tokio::time::timeout(Duration::from_secs(3), async {
+            loop {
+                let snapshot = updates.borrow_and_update().clone();
+                if snapshot.active.is_some() {
+                    break snapshot;
+                }
+                updates.changed().await.unwrap();
+            }
+        })
+        .await
+        .unwrap();
+        ui.history_request(&tx, Load::Latest);
+        drain_history_reads(&mut ui, &mut rx, &client).await;
+        assert_eq!(ui.history_browser.selection(), Some(&Selection::Message(4)));
+        press(&mut ui, KeyCode::Enter, &snapshot, &tx);
+        press(&mut ui, KeyCode::Esc, &snapshot, &tx);
+        assert!(!ui.history.follows_tail());
+        ui.poll(&tx);
+        let mut background = None;
+        while let Ok(work) = rx.try_recv() {
+            let result = client.command(work.command).await;
+            if matches!(work.op, Op::HistoryRefresh) {
+                background = Some((work.op, result));
+            } else {
+                complete(&mut ui, work.op, result);
+            }
+        }
+        let (background, refresh_result) =
+            background.expect("poll must refresh the cached running entry");
+        press(&mut ui, KeyCode::Home, &snapshot, &tx);
+        let page = rx.try_recv().expect("Home must admit a foreground page");
+        assert!(matches!(page.op, Op::History(Load::Oldest, false)));
+        let page_result = client.command(page.command).await;
+        if foreground_first {
+            complete(&mut ui, page.op, page_result);
+            complete(&mut ui, background, refresh_result);
+        } else {
+            complete(&mut ui, background, refresh_result);
+            assert!(ui.history_busy);
+            complete(&mut ui, page.op, page_result);
+        }
+        assert!(!ui.history_busy);
+        assert_eq!(ui.history_browser.selection(), Some(&Selection::Message(1)));
+        assert_eq!(
+            ui.history
+                .entries()
+                .map(|entry| entry.seq)
+                .collect::<Vec<_>>(),
+            [1, 2]
+        );
+        assert!(ui.pending_notices.is_empty());
+        assert!(
+            ui.notice.is_none(),
+            "a superseded read is not an unexpected reply"
+        );
+        client.shutdown().await.unwrap();
+    }
+}
+
 #[test]
 fn history_poll_refreshes_cached_running_action_completion_and_empty_artifact() {
     use crate::storage::{Completion, Store};
