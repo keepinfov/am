@@ -381,22 +381,32 @@ def main():
             assert b"\x1b[?1049h" in output[opened:]
             wait_for(lambda: b"action#" in compact(opened), full_repaint=True)
             action_rows = rows(
-                "SELECT output_id FROM actions ORDER BY seq DESC LIMIT 50"
+                "SELECT label,status,output_id FROM actions ORDER BY seq DESC LIMIT 50"
             )[::-1]
             artifact_index = next(
-                index for index, row in enumerate(action_rows) if row[0]
+                index for index, row in enumerate(action_rows) if row[2]
             )
-            keys(b"\x1b[B" * (artifact_index + 1) + b"\r")
-            preview = len(output)
-            wait_for(
-                lambda: b"NoAPIortoolsareconnectedyet." in compact(preview),
-                full_repaint=True,
-            )
-            assert_text(repaint(), "Preview")
-            artifact_id = action_rows[artifact_index][0]
+            label, status, artifact_id = action_rows[artifact_index]
             artifact_bytes = rows(
                 "SELECT bytes FROM artifacts WHERE id=?", (artifact_id,)
             )[0][0]
+            keys(b"\x1b[B" * (artifact_index + 1) + b"\r")
+
+            def artifact_preview_selected():
+                frame = compact(repaint(last_frame=True))
+                metadata = re.sub(rb"\s", b"", f"{label} [{status}]".encode())
+                return all(
+                    marker in frame
+                    for marker in (
+                        b"Preview",
+                        metadata,
+                        f"{artifact_bytes}bytes".encode(),
+                        b"NoAPIortoolsareconnectedyet.",
+                    )
+                )
+
+            wait_for(artifact_preview_selected)
+            assert_text(repaint(), "Preview")
             artifact_text = Path(
                 str(database) + ".artifacts", artifact_id + ".txt"
             ).read_bytes()
